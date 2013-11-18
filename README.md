@@ -1,0 +1,4 @@
+opengmtest
+==========
+
+OpenGM test
