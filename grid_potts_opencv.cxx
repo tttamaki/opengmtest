@@ -36,10 +36,14 @@
 #include <opengm/graphicalmodel/graphicalmodel.hxx>
 #include <opengm/operations/adder.hxx>
 #include <opengm/operations/minimizer.hxx>
+
+
+#ifdef WITH_MAXFLOW
 #include <opengm/inference/graphcut.hxx>
 #include <opengm/inference/alphabetaswap.hxx>
 #include <opengm/inference/alphaexpansion.hxx>
 #include <opengm/inference/auxiliary/minstcutkolmogorov.hxx>
+#endif
 
 #include <opengm/inference/icm.hxx>
 #include <opengm/inference/lazyflipper.hxx>
@@ -50,14 +54,19 @@
 
 #include <opengm/inference/dynamicprogramming.hxx>
 
+#ifdef WITH_QPBO
 #include <opengm/inference/mqpbo.hxx>
 #include <opengm/inference/external/qpbo.hxx>
+#endif
 
+#ifdef WITH_TRWS
 #include <opengm/inference/external/trws.hxx>
+#endif
 
-
-
+#ifdef WITH_MRF
 #include <opengm/inference/external/mrflib.hxx>
+#endif
+
 #include <opengm/inference/dualdecomposition/dualdecomposition_subgradient.hxx>
 
 #ifdef WITH_LIBDAI
@@ -116,10 +125,14 @@ int main() {
 
     int use_BP = 0;
     cv::createTrackbar("BP", "control panel", &use_BP, 1,  NULL);
+    
+#ifdef WITH_MAXFLOW
     int use_ab_graphcut = 1;
     cv::createTrackbar("a-b GC", "control panel", &use_ab_graphcut, 1,  NULL);
     int use_aexp_graphcut = 0;
     cv::createTrackbar("a-exp GC", "control panel", &use_aexp_graphcut, 1,  NULL);
+#endif
+    
     int use_icm = 0;
     cv::createTrackbar("ICM", "control panel", &use_icm, 1,  NULL);
     int use_lazyFlipper = 0;
@@ -131,8 +144,11 @@ int main() {
     
     int use_TRBP = 0;
     cv::createTrackbar("TRBP", "control panel", &use_TRBP, 1,  NULL);
+    
+#ifdef WITH_TRWS
     int use_TRWS = 0;
     cv::createTrackbar("TRWS", "control panel", &use_TRWS, 1,  NULL);
+#endif
     int use_Gibbs = 0;
     cv::createTrackbar("Gibbs", "control panel", &use_Gibbs, 1,  NULL);
     int use_SwendsenWang = 0;
@@ -305,7 +321,8 @@ int main() {
             bp.arg(labeling);
             //=====================================================
         }
-        
+
+#ifdef WITH_MAXFLOW
         else if (use_ab_graphcut) {
             //=====================================================
             typedef opengm::external::MinSTCutKolmogorov<size_t, double> MinStCutType;
@@ -335,6 +352,7 @@ int main() {
             aexp.arg(labeling);
             //=====================================================
         }
+#endif
         
         else if (use_icm) {
             //=====================================================
@@ -362,7 +380,7 @@ int main() {
             //=====================================================
         }
         
-        
+#ifdef WITH_AD3
         else if (use_loc) {
             //=====================================================
             typedef opengm::LOC<Model, opengm::Minimizer> LOC;
@@ -379,7 +397,7 @@ int main() {
             loc.arg(labeling);
             //=====================================================
         }
-        
+#endif
         
         
         //    //===================================================== can't compile
@@ -413,7 +431,8 @@ int main() {
             trbp.arg(labeling);
             //=====================================================
         }
-        
+
+#ifdef WITH_TRWS
         else if (use_TRWS) {
             //=====================================================
             typedef TrbpUpdateRules<Model, opengm::Minimizer> UpdateRules;
@@ -429,7 +448,7 @@ int main() {
             trws.arg(labeling);
             //=====================================================
         }
-        
+#endif
         
         else if (use_Gibbs) {
             //=====================================================
@@ -479,7 +498,7 @@ int main() {
             //=====================================================
         }
         
-        
+#ifdef WITH_QPBO
         else if (use_MQPBO) {
             typedef opengm::MQPBO<Model, opengm::Minimizer> MQPBO;
             // space must be DiscreteSpace, not SimpleDiscreteSpace
@@ -492,9 +511,9 @@ int main() {
             mqpbo.arg(labeling);
             
         }
+#endif
         
-        
-        
+#ifdef WITH_MRF
         else if (use_MRFLIB_ICM) {
             //=====================================================
             typedef opengm::external::MRFLIB<Model> MRFLIB;
@@ -593,7 +612,7 @@ int main() {
             mrf.arg(labeling);
             //=====================================================
         }
-        
+#endif
         
         
         else if (use_DD_subgradient) {
