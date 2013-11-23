@@ -106,8 +106,8 @@ imshow(const std::string &title,
 using namespace opengm;
 
 // model parameters (global variables are used only in example code)
-const size_t nx = 30; // width of the grid
-const size_t ny = 30; // height of the grid
+const size_t nx = 100; // width of the grid
+const size_t ny = 100; // height of the grid
 const size_t numberOfLabels = 3; // just for RGB
 double lambda = 0.1; // coupling strength of the Potts model
 
@@ -251,8 +251,8 @@ int main() {
         // - addition as the operation (template parameter Adder)
         // - support for Potts functions (template parameter PottsFunction<double>)
         typedef GraphicalModel<double, Adder,
-        OPENGM_TYPELIST_2(ExplicitFunction<double> , PottsFunction<double> ) ,
-        Space> Model;
+                               OPENGM_TYPELIST_2(ExplicitFunction<double> , PottsFunction<double> ) ,
+                               Space> Model;
         Model gm(space);
         
         // for each node (x, y) in the grid, i.e. for each variable
@@ -320,6 +320,34 @@ int main() {
             
             bp.arg(labeling);
             //=====================================================
+            
+            
+            
+            Eigen::MatrixXf mygrid0 = Eigen::MatrixXf::Zero(nx,ny);
+            Eigen::MatrixXf mygrid1 = Eigen::MatrixXf::Zero(nx,ny);
+            Eigen::MatrixXf mygrid2 = Eigen::MatrixXf::Zero(nx,ny);
+            std::vector<Eigen::MatrixXf> gridvec3;
+            gridvec3.push_back(mygrid0);
+            gridvec3.push_back(mygrid1);
+            gridvec3.push_back(mygrid2);
+            
+            for(size_t y = 0; y < ny; ++y)
+                for(size_t x = 0; x < nx; ++x) {
+                    BeliefPropagation::IndependentFactorType ift;
+                    bp.marginal(variableIndex(x, y), ift);
+                    std::cerr << "y,x,s " << y << " " << x;
+                    for(size_t s = 0; s < numberOfLabels; ++s) {
+                        std::cerr << " " << ift(s);
+                        gridvec3[s](y,x) = ift(s);
+                        // Estimated label has the least value (that is 0)
+                        // because now the problem is minimizing,
+                        // and marginals are not normalized
+                        // because this is factor graph (undirected), not bayes net (directed).
+                    }
+                    std::cerr << std::endl;
+                }
+            imshow("marginal", gridvec3, 1.0);
+            
         }
 
 #ifdef WITH_MAXFLOW
@@ -430,6 +458,31 @@ int main() {
             // obtain the (approximate) argmin
             trbp.arg(labeling);
             //=====================================================
+            
+            
+            Eigen::MatrixXf mygrid0 = Eigen::MatrixXf::Zero(nx,ny);
+            Eigen::MatrixXf mygrid1 = Eigen::MatrixXf::Zero(nx,ny);
+            Eigen::MatrixXf mygrid2 = Eigen::MatrixXf::Zero(nx,ny);
+            std::vector<Eigen::MatrixXf> gridvec3;
+            gridvec3.push_back(mygrid0);
+            gridvec3.push_back(mygrid1);
+            gridvec3.push_back(mygrid2);
+            
+            for(size_t y = 0; y < ny; ++y)
+                for(size_t x = 0; x < nx; ++x) {
+                    TRBP::IndependentFactorType ift;
+                    trbp.marginal(variableIndex(x, y), ift);
+                    std::cerr << "y,x,s " << y << " " << x;
+                    for(size_t s = 0; s < numberOfLabels; ++s) {
+                        std::cerr << " " << ift(s);
+                        gridvec3[s](y,x) = ift(s);
+                    }
+                    std::cerr << std::endl;
+                }
+            imshow("marginal", gridvec3, 1.0);
+            
+            
+            
         }
 
 #ifdef WITH_TRWS
