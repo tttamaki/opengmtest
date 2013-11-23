@@ -43,12 +43,16 @@
 
 #include <opengm/inference/icm.hxx>
 #include <opengm/inference/lazyflipper.hxx>
+
+#ifdef WITH_AD3
 #include <opengm/inference/loc.hxx>
+#endif
+
 #include <opengm/inference/dynamicprogramming.hxx>
+
 #include <opengm/inference/mqpbo.hxx>
-
-
 #include <opengm/inference/external/qpbo.hxx>
+
 #include <opengm/inference/external/trws.hxx>
 
 
@@ -56,6 +60,7 @@
 #include <opengm/inference/external/mrflib.hxx>
 #include <opengm/inference/dualdecomposition/dualdecomposition_subgradient.hxx>
 
+#ifdef WITH_LIBDAI
 #include <opengm/inference/external/libdai/bp.hxx>
 #include <opengm/inference/external/libdai/tree_reweighted_bp.hxx>
 #include <opengm/inference/external/libdai/double_loop_generalized_bp.hxx>
@@ -64,7 +69,7 @@
 #include <opengm/inference/external/libdai/junction_tree.hxx>
 #include <opengm/inference/external/libdai/gibbs.hxx>
 #include <opengm/inference/external/libdai/mean_field.hxx>
-
+#endif
 
 
 void
@@ -119,9 +124,11 @@ int main() {
     cv::createTrackbar("ICM", "control panel", &use_icm, 1,  NULL);
     int use_lazyFlipper = 0;
     cv::createTrackbar("LazyFlipper", "control panel", &use_lazyFlipper, 1,  NULL);
+#ifdef WITH_AD3
     int use_loc = 0;
     cv::createTrackbar("LOC", "control panel", &use_loc, 1,  NULL);
-
+#endif
+    
     int use_TRBP = 0;
     cv::createTrackbar("TRBP", "control panel", &use_TRBP, 1,  NULL);
     int use_TRWS = 0;
@@ -133,9 +140,12 @@ int main() {
     
     int use_DP = 0;
     cv::createTrackbar("DP", "control panel", &use_DP, 1,  NULL);
+#ifdef WITH_QPBO
     int use_MQPBO = 0;
     cv::createTrackbar("MQPBO", "control panel", &use_MQPBO, 1,  NULL);
-    
+#endif
+
+#ifdef WITH_MRF
     int use_MRFLIB_ICM = 0;
     cv::createTrackbar("MRFLIB ICM", "control panel", &use_MRFLIB_ICM, 1,  NULL);
     int use_MRFLIB_aexp = 0;
@@ -148,10 +158,11 @@ int main() {
     cv::createTrackbar("MRFLIB BPS", "control panel", &use_MRFLIB_BPS, 1,  NULL);
     int use_MRFLIB_TRWS = 0;
     cv::createTrackbar("MRFLIB TRWS", "control panel", &use_MRFLIB_TRWS, 1,  NULL);
-
+#endif
     int use_DD_subgradient = 0;
     cv::createTrackbar("DD subgrad", "control panel", &use_DD_subgradient, 1,  NULL);
 
+#ifdef WITH_LIBDAI
     int use_libdai_BP = 0;
     cv::createTrackbar("libdai BP", "control panel", &use_libdai_BP, 1,  NULL);
     int use_libdai_TRBP = 0;
@@ -168,7 +179,7 @@ int main() {
     cv::createTrackbar("libdai Gibbs", "control panel", &use_libdai_Gibbs, 1,  NULL);
     int use_libdai_MF = 0;
     cv::createTrackbar("libdai MF", "control panel", &use_libdai_MF, 1,  NULL);
-
+#endif
     
     
     
@@ -357,7 +368,7 @@ int main() {
             typedef opengm::LOC<Model, opengm::Minimizer> LOC;
             LOC::Parameter parameter;
             parameter.phi_ = 5;
-            parameter.maxRadius_ = 10;
+//            parameter.maxRadius_ = 10; // obsolated?
             parameter.maxIterations_ = 100;
             
             LOC loc(gm, parameter);
@@ -604,7 +615,8 @@ int main() {
             //=====================================================
         }
         
-        
+
+#ifdef WITH_LIBDAI
         else if (use_libdai_BP) {
             typedef external::libdai::Bp<Model, opengm::Minimizer> BP;
             const size_t maxIterations=100;
@@ -761,7 +773,7 @@ int main() {
             // obtain the (approximate) argmin
             mf.arg(labeling);
         }
-        
+#endif
         
         
         
