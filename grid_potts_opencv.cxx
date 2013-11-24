@@ -291,7 +291,7 @@ int main() {
         
         // add one (!) 2nd order Potts function
         const double valEqual = -log(lambda/10.);
-        const double valUnequal = -log(1.0-lambda/10.);
+        const double valUnequal = -log( (1.0-lambda/10.) / 2);
         PottsFunction<double> f(numberOfLabels, numberOfLabels, valEqual, valUnequal);
         Model::FunctionIdentifier fid = gm.addFunction(f);
         
@@ -325,7 +325,6 @@ int main() {
             const double convergenceBound = 1e-7;
             const double damping = 0.5;
             BeliefPropagation::Parameter parameter(maxNumberOfIterations, convergenceBound, damping);
-            parameter.inferSequential_ = true;
             BeliefPropagation bp(gm, parameter);
             
             // optimize (approximately)
