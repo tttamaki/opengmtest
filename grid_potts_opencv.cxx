@@ -10,6 +10,7 @@
 #include <string>
 #include <algorithm>
 #include <sstream>
+#include <cmath>
 
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/core/core.hpp>
@@ -36,6 +37,7 @@
 #include <opengm/graphicalmodel/graphicalmodel.hxx>
 #include <opengm/operations/adder.hxx>
 #include <opengm/operations/minimizer.hxx>
+#include <opengm/operations/Minimizer.hxx>
 
 
 #ifdef WITH_MAXFLOW
@@ -94,7 +96,7 @@ imshow(const std::string &title,
     
     
     cv::merge(_rgb, 3, rgb);
-    cv::imshow(title, rgb);
+    cv::imshow(title, rgb*(1.0/maxval));
     
 }
 
@@ -106,10 +108,9 @@ imshow(const std::string &title,
 using namespace opengm;
 
 // model parameters (global variables are used only in example code)
-const size_t nx = 100; // width of the grid
-const size_t ny = 100; // height of the grid
-const size_t numberOfLabels = 3; // just for RGB
-double lambda = 0.1; // coupling strength of the Potts model
+int nx = 100; // width/height of the grid
+size_t numberOfLabels = 3; // just for RGB
+int lambda = 8; //  x0.1  // coupling strength of the Potts model
 
 // this function maps a node (x, y) in the grid to a unique variable index
 inline size_t variableIndex(const size_t x, const size_t y) {
@@ -122,6 +123,10 @@ int main() {
     
     
     cv::namedWindow("control panel", CV_WINDOW_NORMAL | CV_GUI_EXPANDED);
+    
+    cv::createTrackbar("nx", "control panel", &nx, 300,  NULL);
+    cv::createTrackbar("lambda", "control panel", &lambda, 10,  NULL);
+    
 
     int use_BP = 0;
     cv::createTrackbar("BP", "control panel", &use_BP, 1,  NULL);
@@ -149,10 +154,14 @@ int main() {
     int use_TRWS = 0;
     cv::createTrackbar("TRWS", "control panel", &use_TRWS, 1,  NULL);
 #endif
+
+#ifdef WITH_SAMPLING
+    // Gibbs and SW seem to be implemented for minimizer only.
     int use_Gibbs = 0;
     cv::createTrackbar("Gibbs", "control panel", &use_Gibbs, 1,  NULL);
     int use_SwendsenWang = 0;
     cv::createTrackbar("SW", "control panel", &use_SwendsenWang, 1,  NULL);
+#endif
     
     int use_DP = 0;
     cv::createTrackbar("DP", "control panel", &use_DP, 1,  NULL);
@@ -223,26 +232,32 @@ int main() {
         
         
         // construct a label space with
-        // - nx * ny variables
+        // - nx * nx variables
         // - each having numberOfLabels many labels
 //        typedef SimpleDiscreteSpace<size_t, size_t> Space;  // mqpbo does not accept this.
         typedef DiscreteSpace<size_t, size_t> Space;
-        Space space(nx * ny, numberOfLabels);
+        Space space((size_t)(nx * nx), numberOfLabels);
         
         if(recreate == 1){
             gridvec.clear();
-            double c[] = {ny/4, ny/2, ny/4*3};
+            double c[] = {nx/4, nx/2, nx/4*3};
+            Eigen::MatrixXf mygridsum = Eigen::MatrixXf::Zero(nx,nx);
             for(size_t s = 0; s < numberOfLabels; ++s) {
-                Eigen::MatrixXf mygrid = Eigen::MatrixXf::Zero(nx,ny);
-                for(size_t y = 0; y < ny; ++y)
+                Eigen::MatrixXf mygrid = Eigen::MatrixXf::Zero(nx,nx);
+                for(size_t y = 0; y < nx; ++y)
                     for(size_t x = 0; x < nx; ++x) {
-                        mygrid(y,x) = 0.8 * exp( - ((c[s] - x)*(c[s] - x) + (c[s] - y)*(c[s] - y)) / (ny*2) );
-                        mygrid(y,x) += noise/10. * (rand() / (double)RAND_MAX);
+                        double p;
+                        p = 0.8 * exp( - ((c[s] - x)*(c[s] - x) + (c[s] - y)*(c[s] - y)) / (nx*2) );
+                        p += noise/10. * (rand() / (double)RAND_MAX);
+                        mygrid(y,x) = p;
                     }
+                mygridsum += mygrid;
                 gridvec.push_back(mygrid);
             }
-
-            cv::setTrackbarPos("re-create", "control panel", 0);
+            for(size_t s = 0; s < numberOfLabels; ++s) {
+                gridvec[s] = gridvec[s].cwiseQuotient(mygridsum);
+            }
+//            cv::setTrackbarPos("re-create", "control panel", 0);
         }
         imshow("RGB", gridvec, 1.0);
         
@@ -258,14 +273,14 @@ int main() {
         // for each node (x, y) in the grid, i.e. for each variable
         // variableIndex(x, y) of the model, add one 1st order functions
         // and one 1st order factor
-        for(size_t y = 0; y < ny; ++y)
+        for(size_t y = 0; y < nx; ++y)
             for(size_t x = 0; x < nx; ++x) {
                 // function
                 const size_t shape[] = {numberOfLabels};
                 ExplicitFunction<double> f(shape, shape + 1);
                 for(size_t s = 0; s < numberOfLabels; ++s) {
-                    double tmp = 1.0 - gridvec[s](y,x); //rand() / (double)RAND_MAX;
-                    f(s) = (1.0 - lambda) * tmp;
+                    double tmp = gridvec[s](y,x);
+                    f(s) = -log(tmp);
                 }
                 Model::FunctionIdentifier fid = gm.addFunction(f);
                 
@@ -275,22 +290,22 @@ int main() {
             }
         
         // add one (!) 2nd order Potts function
-        const double valEqual = 0.0;
-        const double valUnequal = lambda;
+        const double valEqual = -log(lambda/10.);
+        const double valUnequal = -log(1.0-lambda/10.);
         PottsFunction<double> f(numberOfLabels, numberOfLabels, valEqual, valUnequal);
         Model::FunctionIdentifier fid = gm.addFunction(f);
         
         // for each pair of nodes (x1, y1), (x2, y2) which are adjacent on the grid,
         // add one factor that connects the corresponding variable indices and
         // refers to the Potts function
-        for(size_t y = 0; y < ny; ++y)
+        for(size_t y = 0; y < nx; ++y)
             for(size_t x = 0; x < nx; ++x) {
                 if(x + 1 < nx) { // (x, y) -- (x + 1, y)
                     size_t variableIndices[] = {variableIndex(x, y), variableIndex(x + 1, y)};
                     std::sort(variableIndices, variableIndices + 2);
                     gm.addFactor(fid, variableIndices, variableIndices + 2);
                 }
-                if(y + 1 < ny) { // (x, y) -- (x, y + 1)
+                if(y + 1 < nx) { // (x, y) -- (x, y + 1)
                     size_t variableIndices[] = {variableIndex(x, y), variableIndex(x, y + 1)};
                     std::sort(variableIndices, variableIndices + 2);
                     gm.addFactor(fid, variableIndices, variableIndices + 2);
@@ -299,7 +314,7 @@ int main() {
 
         
 
-        std::vector<size_t> labeling(nx * ny);
+        std::vector<size_t> labeling(nx * nx);
         
         if (use_BP) {
             //=====================================================
@@ -310,6 +325,7 @@ int main() {
             const double convergenceBound = 1e-7;
             const double damping = 0.5;
             BeliefPropagation::Parameter parameter(maxNumberOfIterations, convergenceBound, damping);
+            parameter.inferSequential_ = true;
             BeliefPropagation bp(gm, parameter);
             
             // optimize (approximately)
@@ -323,15 +339,15 @@ int main() {
             
             
             
-            Eigen::MatrixXf mygrid0 = Eigen::MatrixXf::Zero(nx,ny);
-            Eigen::MatrixXf mygrid1 = Eigen::MatrixXf::Zero(nx,ny);
-            Eigen::MatrixXf mygrid2 = Eigen::MatrixXf::Zero(nx,ny);
+            Eigen::MatrixXf mygrid0 = Eigen::MatrixXf::Zero(nx,nx);
+            Eigen::MatrixXf mygrid1 = Eigen::MatrixXf::Zero(nx,nx);
+            Eigen::MatrixXf mygrid2 = Eigen::MatrixXf::Zero(nx,nx);
             std::vector<Eigen::MatrixXf> gridvec3;
             gridvec3.push_back(mygrid0);
             gridvec3.push_back(mygrid1);
             gridvec3.push_back(mygrid2);
             
-            for(size_t y = 0; y < ny; ++y)
+            for(size_t y = 0; y < nx; ++y)
                 for(size_t x = 0; x < nx; ++x) {
                     BeliefPropagation::IndependentFactorType ift;
                     bp.marginal(variableIndex(x, y), ift);
@@ -346,7 +362,7 @@ int main() {
                     }
                     std::cerr << std::endl;
                 }
-            imshow("marginal", gridvec3, 1.0);
+            imshow("marginal", gridvec3, 15.0);
             
         }
 
@@ -460,15 +476,15 @@ int main() {
             //=====================================================
             
             
-            Eigen::MatrixXf mygrid0 = Eigen::MatrixXf::Zero(nx,ny);
-            Eigen::MatrixXf mygrid1 = Eigen::MatrixXf::Zero(nx,ny);
-            Eigen::MatrixXf mygrid2 = Eigen::MatrixXf::Zero(nx,ny);
+            Eigen::MatrixXf mygrid0 = Eigen::MatrixXf::Zero(nx,nx);
+            Eigen::MatrixXf mygrid1 = Eigen::MatrixXf::Zero(nx,nx);
+            Eigen::MatrixXf mygrid2 = Eigen::MatrixXf::Zero(nx,nx);
             std::vector<Eigen::MatrixXf> gridvec3;
             gridvec3.push_back(mygrid0);
             gridvec3.push_back(mygrid1);
             gridvec3.push_back(mygrid2);
             
-            for(size_t y = 0; y < ny; ++y)
+            for(size_t y = 0; y < nx; ++y)
                 for(size_t x = 0; x < nx; ++x) {
                     TRBP::IndependentFactorType ift;
                     trbp.marginal(variableIndex(x, y), ift);
@@ -502,7 +518,8 @@ int main() {
             //=====================================================
         }
 #endif
-        
+
+#ifdef WITH_SAMPLING
         else if (use_Gibbs) {
             //=====================================================
             typedef opengm::Gibbs<Model, opengm::Minimizer> Gibbs;
@@ -537,7 +554,9 @@ int main() {
             sw.arg(labeling);
             //=====================================================
         }
+#endif
         
+#ifdef WITH_DP
         else if (use_DP) {
             //===================================================== So slow
             typedef opengm::DynamicProgramming<Model, opengm::Minimizer> DP;
@@ -550,6 +569,7 @@ int main() {
             dp.arg(labeling);
             //=====================================================
         }
+#endif
         
 #ifdef WITH_QPBO
         else if (use_MQPBO) {
@@ -851,9 +871,9 @@ int main() {
         
         
         
-        Eigen::MatrixXf mygrid0 = Eigen::MatrixXf::Zero(nx,ny);
-        Eigen::MatrixXf mygrid1 = Eigen::MatrixXf::Zero(nx,ny);
-        Eigen::MatrixXf mygrid2 = Eigen::MatrixXf::Zero(nx,ny);
+        Eigen::MatrixXf mygrid0 = Eigen::MatrixXf::Zero(nx,nx);
+        Eigen::MatrixXf mygrid1 = Eigen::MatrixXf::Zero(nx,nx);
+        Eigen::MatrixXf mygrid2 = Eigen::MatrixXf::Zero(nx,nx);
         std::vector<Eigen::MatrixXf> gridvec2;
         gridvec2.push_back(mygrid0);
         gridvec2.push_back(mygrid1);
@@ -862,7 +882,7 @@ int main() {
         
         // output the (approximate) argmin
         size_t variableIndex = 0;
-        for(size_t y = 0; y < ny; ++y) {
+        for(size_t y = 0; y < nx; ++y) {
             for(size_t x = 0; x < nx; ++x) {
                 
                 gridvec2[labeling[variableIndex]](y,x) = 1;
