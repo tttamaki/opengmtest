@@ -9,6 +9,7 @@ WITH_QPBO = 1
 WITH_TRWS = 1
 WITH_AD3 = 
 WITH_MRF = 1
+WITH_FASTPD = 1
 
 ifdef WITH_LIBDAI
   EXTLIBS += -L$(LIBDAI_LIB) -ldai -lgmp -lgmpxx -DWITH_LIBDAI
@@ -27,6 +28,9 @@ ifdef WITH_AD3
 endif
 ifdef WITH_MRF
   EXTLIBS += -I$(OPENGM_EXTSRC)/MRF-v2.1.src-patched/      -lexternal-library-mrf -DMRFCOSTVALUE=double -DMRFENERGYVALUE=double -DMRFLABELVALUE=int  -DWITH_MRF
+endif
+ifdef WITH_FASTPD
+  EXTLIBS += -I$(OPENGM_EXTSRC)/FastPD.src-patched/      -lexternal-library-fastpd  -DWITH_FASTPD -DFASTPDENERGYVALUE=double -DFASTPDLABELVALUE=size_t
 endif
 
 

@@ -82,6 +82,11 @@
 #include <opengm/inference/external/libdai/mean_field.hxx>
 #endif
 
+#ifdef WITH_FASTPD
+#include <opengm/inference/external/fastPD.hxx>
+#endif
+
+
 
 void
 imshow(const std::string &title,
@@ -206,8 +211,10 @@ int main() {
     cv::createTrackbar("libdai MF", "control panel", &use_libdai_MF, 1,  NULL);
 #endif
     
-    
-    
+#ifdef WITH_FASTPD
+    int use_fastPD = 0;
+    cv::createTrackbar("FastPD", "control panel", &use_fastPD, 1,  NULL);
+#endif
     
     
     
@@ -706,6 +713,23 @@ int main() {
             //=====================================================
         }
         
+#ifdef WITH_FASTPD
+        else if (use_fastPD) {
+            //=====================================================
+            typedef opengm::external::FastPD<Model, opengm::Minimizer> fastPD;
+            fastPD::Parameter param;
+            param.numberOfIterations_ = 1000;
+
+            fastPD fastpd(gm, param);
+            fastPD::VerboseVisitorType visitor;
+            fastpd.infer(visitor);
+            
+            // obtain the (approximate) argmin
+            fastpd.arg(labeling);
+            //=====================================================
+        }
+#endif
+
 
 #ifdef WITH_LIBDAI
         else if (use_libdai_BP) {
