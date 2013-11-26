@@ -83,7 +83,9 @@
 #endif
 
 #ifdef WITH_FASTPD
-#include <opengm/inference/external/fastPD.hxx>
+#undef MAX
+#undef MIN
+#include <opengm/inference/external/fastPD.hxx> // this defines functions MAX and MIN which conflict with MAX/MIN macros defined in opencv2
 #endif
 
 
@@ -297,7 +299,11 @@ int main() {
             }
         
         // add one (!) 2nd order Potts function
+#ifdef WITH_FASTPD
+        const double valEqual = 0.; // FastPD requires this.
+#else
         const double valEqual = -log(lambda/10.);
+#endif
         const double valUnequal = -log( (1.0-lambda/10.) / 2);
         PottsFunction<double> f(numberOfLabels, numberOfLabels, valEqual, valUnequal);
         Model::FunctionIdentifier fid = gm.addFunction(f);
@@ -716,7 +722,7 @@ int main() {
 #ifdef WITH_FASTPD
         else if (use_fastPD) {
             //=====================================================
-            typedef opengm::external::FastPD<Model, opengm::Minimizer> fastPD;
+            typedef opengm::external::FastPD<Model> fastPD;
             fastPD::Parameter param;
             param.numberOfIterations_ = 1000;
 
