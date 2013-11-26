@@ -59,6 +59,7 @@
 #ifdef WITH_QPBO
 #include <opengm/inference/mqpbo.hxx>
 #include <opengm/inference/external/qpbo.hxx>
+#include <opengm/inference/alphaexpansionfusion.hxx>
 #endif
 
 #ifdef WITH_TRWS
@@ -175,6 +176,8 @@ int main() {
 #ifdef WITH_QPBO
     int use_MQPBO = 0;
     cv::createTrackbar("MQPBO", "control panel", &use_MQPBO, 1,  NULL);
+    int use_aexp_fusion = 0;
+    cv::createTrackbar("a-exp-fusion", "control panel", &use_aexp_fusion, 1,  NULL);
 #endif
 
 #ifdef WITH_MRF
@@ -594,6 +597,17 @@ int main() {
             
             // obtain the (approximate) argmin
             mqpbo.arg(labeling);
+            
+        }
+        else if (use_aexp_fusion) {
+            typedef opengm::AlphaExpansionFusion<Model, opengm::Minimizer> AlphaExpFusion;
+            
+            AlphaExpFusion aexp_fusion(gm);
+            AlphaExpFusion::VerboseVisitorType visitor;
+            aexp_fusion.infer(visitor);
+            
+            // obtain the (approximate) argmin
+            aexp_fusion.arg(labeling);
             
         }
 #endif
