@@ -8,10 +8,10 @@ WITH_MAXFLOW = 1
 WITH_QPBO = 1
 WITH_TRWS = 1
 WITH_AD3 = 1
-WITH_MRF = 1
-WITH_FASTPD =
+WITH_MRF =
+WITH_FASTPD = 1
 WITH_MPLP = 1
-WITH_GCO =
+WITH_GCO = 1
 
 ifdef WITH_LIBDAI
   EXTLIBS += -L$(LIBDAI_LIB) -ldai -lgmp -lgmpxx -DWITH_LIBDAI
@@ -56,3 +56,4 @@ stereo: stereo.cxx
 	-L/opt/local/lib -I/usr/local/include -O3 -DNDEBUG \
 	`pkg-config --cflags opencv eigen3` `pkg-config --libs opencv eigen3` \
 	-L$(OPENGM_EXTLIB) $(EXTLIBS)
+

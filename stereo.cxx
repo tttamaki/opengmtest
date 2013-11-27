@@ -28,6 +28,8 @@
 #include <opengm/graphicalmodel/graphicalmodel.hxx>
 #include <opengm/graphicalmodel/space/simplediscretespace.hxx>
 #include <opengm/functions/potts.hxx>
+#include <opengm/functions/truncated_absolute_difference.hxx>
+
 #include <opengm/operations/adder.hxx>
 #include <opengm/inference/messagepassing/messagepassing.hxx>
 #include <opengm/inference/gibbs.hxx>
@@ -127,7 +129,7 @@ using namespace opengm;
 // model parameters (global variables are used only in example code)
 //int nx = 100; // width/height of the grid
 //size_t numberOfLabels = 3; // just for RGB
-int lambda = 8; //  x0.1  // coupling strength of the Potts model
+//int lambda = 8; //  x0.1  // coupling strength of the Potts model
 
 // this function maps a node (x, y) in the grid to a unique variable index
 inline size_t variableIndex(const size_t x, const size_t y, const size_t nx) {
@@ -178,7 +180,7 @@ options parseOptions(int argc, char* argv[]) {
     }
     
     if (vm.count("R"))
-        Opt.filenameL = vm["R"].as<string>();
+        Opt.filenameR = vm["R"].as<string>();
     else{
         cout << "no right image filename is specified." << endl
         << desc << endl;
@@ -198,7 +200,8 @@ int main ( int argc, char **argv )
     cv::namedWindow("control panel", CV_WINDOW_NORMAL | CV_GUI_EXPANDED);
     
     //cv::createTrackbar("nx", "control panel", &nx, 300,  NULL);
-    cv::createTrackbar("lambda", "control panel", &lambda, 10,  NULL);
+    int lambda = 5;
+    cv::createTrackbar("lambda", "control panel", &lambda, 20,  NULL);
     
 
     int use_BP = 1;
@@ -317,7 +320,7 @@ int main ( int argc, char **argv )
     
     
     cv::Mat imgL = cv::imread(Option.filenameL);
-    cv::Mat imgR = cv::imread(Option.filenameL);
+    cv::Mat imgR = cv::imread(Option.filenameR);
     int nChannelsL = imgL.channels();
     int nChannelsR = imgR.channels();
     assert(nChannelsL == nChannelsR);
@@ -331,11 +334,13 @@ int main ( int argc, char **argv )
     size_t ny = imgL.size().height;
     assert(nx > 0);
     assert(ny > 0);
+    assert(imgL.size() == imgR.size());
     
     vector<cv::Mat> imgLs, imgRs;
     cv::split(imgL, imgLs);
     cv::split(imgR, imgRs);
 
+    cv::waitKey(0);
     
     while(1){
         
@@ -343,7 +348,7 @@ int main ( int argc, char **argv )
         
         
         // construct a label space with
-        // - nx * nx variables
+        // - nx * ny variables
         // - each having numberOfLabels many labels
 //      typedef SimpleDiscreteSpace<size_t, size_t> Space;  // mqpbo does not accept this.
         typedef DiscreteSpace<size_t, size_t> Space;
@@ -353,7 +358,7 @@ int main ( int argc, char **argv )
         // - addition as the operation (template parameter Adder)
         // - support for Potts functions (template parameter PottsFunction<double>)
         typedef GraphicalModel<double, Adder,
-                               OPENGM_TYPELIST_2(ExplicitFunction<double> , PottsFunction<double> ) ,
+                               OPENGM_TYPELIST_2(ExplicitFunction<double> , TruncatedAbsoluteDifferenceFunction<double> ) ,
                                Space> Model;
         Model gm(space);
         
@@ -421,6 +426,9 @@ int main ( int argc, char **argv )
         // value for out-of-bounds matches
         int badcost = std::min(worst_match, maxsumdiff);
         
+        
+//        cv::Mat DSIy(nD, nx, CV_8U);
+        
         int dsiIndex = 0;
         for (int y = 0; y < ny; y++) {
             for (int x = 0; x < nx; x++) {
@@ -446,9 +454,9 @@ int main ( int argc, char **argv )
                                 int im1c = imgLs[b].at<uchar>(y,x);
                                 int im1l = x == 0?    im1c : (im1c + imgLs[b].at<uchar>(y,x-1)) / 2;
                                 int im1r = x == nx-1? im1c : (im1c + imgLs[b].at<uchar>(y,x+1)) / 2;
-                                int im2c = imgRs[b].at<uchar>(y,x);
-                                int im2l = x2 == 0?    im2c : (im2c + imgRs[b].at<uchar>(y,x+1)) / 2;
-                                int im2r = x2 == nx-1? im2c : (im2c + imgRs[b].at<uchar>(y,x+1)) / 2;
+                                int im2c = imgRs[b].at<uchar>(y,x2);
+                                int im2l = x2 == 0?    im2c : (im2c + imgRs[b].at<uchar>(y,x2-1)) / 2;
+                                int im2r = x2 == nx-1? im2c : (im2c + imgRs[b].at<uchar>(y,x2+1)) / 2;
                                 int min1 = std::min(im1c, std::min(im1l, im1r));
                                 int max1 = std::max(im1c, std::max(im1l, im1r));
                                 int min2 = std::min(im2c, std::min(im2l, im2r));
@@ -459,7 +467,7 @@ int main ( int argc, char **argv )
                             } else {
                                 // simple absolute difference
                                 //int di = pix1[b] - pix2[b];
-                                int di = imgLs[b].at<uchar>(y,x) - imgRs[b].at<uchar>(y,x);
+                                int di = imgLs[b].at<uchar>(y,x) - imgRs[b].at<uchar>(y,x2);
                                 diff = abs(di);
                             }
                             // square diffs if requested (Birchfield too...)
@@ -472,11 +480,12 @@ int main ( int argc, char **argv )
                         //dsiValue = badcost;
                         f(d) = badcost;
                     }
-                    
                     // The cost of pixel p and label l is stored at dsi[p*nLabels+l]
                     //dsi[dsiIndex++] = dsiValue;
                     
-                   
+//                    if (y == 150) {
+//                        DSIy.at<uchar>(d,x) = f(d); // check DSI at a particular y
+//                    }
                 }
                 
                 // factor
@@ -490,42 +499,43 @@ int main ( int argc, char **argv )
         
         //////////////////////////////////////////
         
+//        imshow("DSI", DSIy);
+//        cv::waitKey(0);
+    
+        //std::cerr << "gm.numberOfVariables() " << gm.numberOfVariables() << std::endl;
         
 
-    
-        
-        
-        // add one (!) 2nd order Potts function
-#ifdef WITH_FASTPD
-        const double valEqual = 0.; // FastPD requires this.
-#else
-        const double valEqual = -log(lambda/10.);
-#endif
-        const double valUnequal = -log( (1.0-lambda/10.) / 2);
-        PottsFunction<double> f(nD, nD, valEqual, valUnequal);
+//        // add one (!) 2nd order Potts function
+//#ifdef WITH_FASTPD
+//        const double valEqual = 0.; // FastPD requires this.
+//#else
+//        const double valEqual = -log(lambda/10.);
+//#endif
+//        const double valUnequal = -log( (1.0-lambda/10.) / 2);
+//        PottsFunction<double> f(nD, nD, valEqual, valUnequal);
+
+        opengm::TruncatedAbsoluteDifferenceFunction<double> f(nD, nD, 2, lambda);
         Model::FunctionIdentifier fid = gm.addFunction(f);
         
         // for each pair of nodes (x1, y1), (x2, y2) which are adjacent on the grid,
         // add one factor that connects the corresponding variable indices and
         // refers to the Potts function
-        for(size_t y = 0; y < nx; ++y)
+        for(size_t y = 0; y < ny; ++y)
             for(size_t x = 0; x < nx; ++x) {
                 if(x + 1 < nx) { // (x, y) -- (x + 1, y)
                     size_t variableIndices[] = {variableIndex(x, y, nx), variableIndex(x + 1, y, nx)};
                     std::sort(variableIndices, variableIndices + 2);
                     gm.addFactor(fid, variableIndices, variableIndices + 2);
                 }
-                if(y + 1 < nx) { // (x, y) -- (x, y + 1)
+                if(y + 1 < ny) { // (x, y) -- (x, y + 1)
                     size_t variableIndices[] = {variableIndex(x, y, nx), variableIndex(x, y + 1, nx)};
                     std::sort(variableIndices, variableIndices + 2);
                     gm.addFactor(fid, variableIndices, variableIndices + 2);
                 }
             }
 
-        cv::waitKey(0);
-        exit(1);
 
-        std::vector<size_t> labeling(nx * nx);
+        std::vector<size_t> labeling(nx * ny);
         
         if (use_BP) {
             //=====================================================
@@ -1116,15 +1126,15 @@ int main ( int argc, char **argv )
         
         
         
-        cv::Mat labels(nx, ny, CV_8U);
+        cv::Mat labels(ny, nx, CV_8U);
         
         
         
         // output the (approximate) argmin
-        for(size_t y = 0; y < nx; ++y) {
+        for(size_t y = 0; y < ny; ++y) {
             for(size_t x = 0; x < nx; ++x) {
                 
-                labels.at<uchar>(y,x) = labeling[variableIndex(x, y, nx)];
+                labels.at<uchar>(y,x) = labeling[variableIndex(x, y, nx)] * (255/(nD-1));
                 
             }
         }
