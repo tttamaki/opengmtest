@@ -7,9 +7,11 @@ WITH_LIBDAI =
 WITH_MAXFLOW = 1
 WITH_QPBO = 1
 WITH_TRWS = 1
-WITH_AD3 = 
+WITH_AD3 = 1
 WITH_MRF = 1
-WITH_FASTPD = 1
+WITH_FASTPD =
+WITH_MPLP = 1
+WITH_GCO =
 
 ifdef WITH_LIBDAI
   EXTLIBS += -L$(LIBDAI_LIB) -ldai -lgmp -lgmpxx -DWITH_LIBDAI
@@ -18,19 +20,25 @@ ifdef WITH_MAXFLOW
   EXTLIBS += -I$(OPENGM_EXTSRC)/MaxFlow-v3.02.src-patched/ -lexternal-library-maxflow -DWITH_MAXFLOW
 endif
 ifdef WITH_QPBO
-  EXTLIBS += -I$(OPENGM_EXTSRC)/QPBO-v1.3.src-patched/     -lexternal-library-qpbo -DWITH_QPBO
+  EXTLIBS += -I$(OPENGM_EXTSRC)/QPBO-v1.3.src-patched/     -lexternal-library-qpbo    -DWITH_QPBO
 endif
 ifdef WITH_TRWS
-  EXTLIBS += -I$(OPENGM_EXTSRC)/TRWS-v1.3.src-patched/     -lexternal-library-trws -DWITH_TRWS
+  EXTLIBS += -I$(OPENGM_EXTSRC)/TRWS-v1.3.src-patched/     -lexternal-library-trws    -DWITH_TRWS
 endif
 ifdef WITH_AD3
-  EXTLIBS += -I$(OPENGM_EXTSRC)/AD3-patched/               -lexternal-library-ad3    -DWITH_AD3
+  EXTLIBS += -I$(OPENGM_EXTSRC)/AD3-patched/               -lexternal-library-ad3     -DWITH_AD3
 endif
 ifdef WITH_MRF
-  EXTLIBS += -I$(OPENGM_EXTSRC)/MRF-v2.1.src-patched/      -lexternal-library-mrf -DMRFCOSTVALUE=double -DMRFENERGYVALUE=double -DMRFLABELVALUE=int  -DWITH_MRF
+  EXTLIBS += -I$(OPENGM_EXTSRC)/MRF-v2.1.src-patched/      -lexternal-library-mrf     -DWITH_MRF -DMRFCOSTVALUE=double -DMRFENERGYVALUE=double -DMRFLABELVALUE=int
 endif
 ifdef WITH_FASTPD
-  EXTLIBS += -I$(OPENGM_EXTSRC)/FastPD.src-patched/      -lexternal-library-fastpd  -DWITH_FASTPD -DFASTPDENERGYVALUE=double -DFASTPDLABELVALUE=size_t
+  EXTLIBS += -I$(OPENGM_EXTSRC)/FastPD.src-patched/        -lexternal-library-fastpd  -DWITH_FASTPD -DFASTPDENERGYVALUE=double -DFASTPDLABELVALUE=size_t
+endif
+ifdef WITH_MPLP
+  EXTLIBS += -I$(OPENGM_EXTSRC)/mplp_ver2.src-patched/     -lexternal-library-mplp    -DWITH_MPLP
+endif
+ifdef WITH_GCO
+  EXTLIBS += -I$(OPENGM_EXTSRC)/GCO-v3.0.src-patched/      -lexternal-library-gco     -DWITH_GCO -DGCOENERGYVALUE=double -DGCOLABELVALUE=int
 endif
 
 

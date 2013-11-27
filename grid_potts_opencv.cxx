@@ -90,6 +90,15 @@
 #endif
 
 
+#ifdef WITH_MPLP
+#include <opengm/inference/external/mplp.hxx>
+#undef eps
+#endif
+
+#ifdef WITH_GCO
+#include <opengm/inference/external/gco.hxx> // can't be complied with WITH_MRF at the same time because two files of the same name "GCOptimization.h" conflicts to each other.
+#endif
+
 
 void
 imshow(const std::string &title,
@@ -219,6 +228,18 @@ int main() {
 #ifdef WITH_FASTPD
     int use_fastPD = 0;
     cv::createTrackbar("FastPD", "control panel", &use_fastPD, 1,  NULL);
+#endif
+    
+#ifdef WITH_MPLP
+    int use_MPLP = 0;
+    cv::createTrackbar("MPLP", "control panel", &use_MPLP, 1,  NULL);
+#endif
+    
+#ifdef WITH_GCO
+    int use_GCO_aexp = 0;
+    cv::createTrackbar("GCO aexp", "control panel", &use_GCO_aexp, 1,  NULL);
+    int use_GCO_swap = 0;
+    cv::createTrackbar("GCO swap", "control panel", &use_GCO_swap, 1,  NULL);
 #endif
     
     
@@ -636,7 +657,7 @@ int main() {
             MRFLIB::Parameter para;
             para.inferenceType_ = MRFLIB::Parameter::EXPANSION;
 //            para.energyType_ = MRFLIB::Parameter::TL1;
-            para.energyType_ = MRFLIB::Parameter::TABLES;
+            para.energyType_ = MRFLIB::Parameter::VIEW;
             para.numberOfIterations_ = 10;
             MRFLIB mrf(gm,para);
             MRFLIB::VerboseVisitorType visitor;
@@ -653,7 +674,7 @@ int main() {
             MRFLIB::Parameter para;
             para.inferenceType_ = MRFLIB::Parameter::SWAP;
 //            para.energyType_ = MRFLIB::Parameter::TL1;
-            para.energyType_ = MRFLIB::Parameter::TABLES;
+            para.energyType_ = MRFLIB::Parameter::VIEW;
             para.numberOfIterations_ = 10;
             MRFLIB mrf(gm,para);
             MRFLIB::VerboseVisitorType visitor;
@@ -750,7 +771,59 @@ int main() {
         }
 #endif
 
-
+#ifdef WITH_MPLP
+        else if (use_MPLP) {
+            //=====================================================
+            typedef opengm::external::MPLP<Model> Mplp;
+            Mplp::Parameter param;
+            param.maxTime_ = 120;
+            
+            Mplp mplp(gm, param);
+            Mplp::VerboseVisitorType visitor;
+            mplp.infer(visitor);
+            
+            // obtain the (approximate) argmin
+            mplp.arg(labeling);
+            //=====================================================
+        }
+#endif
+        
+#ifdef WITH_GCO
+        else if (use_GCO_aexp) {
+            //=====================================================
+            typedef opengm::external::GCOLIB<Model> GCO;
+            GCO::Parameter param;
+            param.inferenceType_ = GCO::Parameter::EXPANSION; // EXPANSION, SWAP
+            param.energyType_ = GCO::Parameter::VIEW; // VIEW, TABLES, WEIGHTEDTABLE
+            param.useAdaptiveCycles_ = false; // for alpha-expansion
+            
+            GCO gco(gm, param);
+            GCO::VerboseVisitorType visitor;
+            gco.infer(visitor);
+            
+            // obtain the (approximate) argmin
+            gco.arg(labeling);
+            //=====================================================
+        }
+        else if (use_GCO_swap) {
+            //=====================================================
+            typedef opengm::external::GCOLIB<Model> GCO;
+            GCO::Parameter param;
+            param.inferenceType_ = GCO::Parameter::SWAP; // EXPANSION, SWAP
+            param.energyType_ = GCO::Parameter::VIEW; // VIEW, TABLES, WEIGHTEDTABLE
+            //param.useAdaptiveCycles_ = false; // for alpha-expansion
+            
+            GCO gco(gm, param);
+            GCO::VerboseVisitorType visitor;
+            gco.infer(visitor);
+            
+            // obtain the (approximate) argmin
+            gco.arg(labeling);
+            //=====================================================
+        }
+#endif
+     
+        
 #ifdef WITH_LIBDAI
         else if (use_libdai_BP) {
             typedef external::libdai::Bp<Model, opengm::Minimizer> BP;
