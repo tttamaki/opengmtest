@@ -96,7 +96,7 @@
 #endif
 
 #ifdef WITH_GCO
-#include <opengm/inference/external/gco.hxx> // can't be complied with WITH_MRF at the same time because two files of the same name "GCOptimization.h" conflicts to each other.
+#include <opengm/inference/external/gco.hxx> // can't be complied with WITH_MRF at the same time because two files of the same name "GCoptimization.h" conflicts to each other.
 #endif
 
 
@@ -125,14 +125,17 @@ imshow(const std::string &title,
 using namespace opengm;
 
 // model parameters (global variables are used only in example code)
-int nx = 100; // width/height of the grid
-size_t numberOfLabels = 3; // just for RGB
+//int nx = 100; // width/height of the grid
+//size_t numberOfLabels = 3; // just for RGB
 int lambda = 8; //  x0.1  // coupling strength of the Potts model
 
 // this function maps a node (x, y) in the grid to a unique variable index
-inline size_t variableIndex(const size_t x, const size_t y) {
+inline size_t variableIndex(const size_t x, const size_t y, const size_t nx) {
     return x + nx * y;
 }
+
+
+
 
 
 
@@ -194,15 +197,15 @@ int main ( int argc, char **argv )
     
     cv::namedWindow("control panel", CV_WINDOW_NORMAL | CV_GUI_EXPANDED);
     
-    cv::createTrackbar("nx", "control panel", &nx, 300,  NULL);
+    //cv::createTrackbar("nx", "control panel", &nx, 300,  NULL);
     cv::createTrackbar("lambda", "control panel", &lambda, 10,  NULL);
     
 
-    int use_BP = 0;
+    int use_BP = 1;
     cv::createTrackbar("BP", "control panel", &use_BP, 1,  NULL);
     
 #ifdef WITH_MAXFLOW
-    int use_ab_graphcut = 1;
+    int use_ab_graphcut = 0;
     cv::createTrackbar("a-b GC", "control panel", &use_ab_graphcut, 1,  NULL);
     int use_aexp_graphcut = 0;
     cv::createTrackbar("a-exp GC", "control panel", &use_aexp_graphcut, 1,  NULL);
@@ -297,13 +300,14 @@ int main ( int argc, char **argv )
     
     
     
+    size_t nD = 16; // number of disparities
+
     
     
-    
-    int noise = 2;
-    cv::createTrackbar("noise*10", "control panel", &noise, 10,  NULL);
-    int recreate = 1;
-    cv::createTrackbar("re-create", "control panel", &recreate, 1,  NULL);
+//    int noise = 2;
+//    cv::createTrackbar("noise*10", "control panel", &noise, 10,  NULL);
+//    int recreate = 1;
+//    cv::createTrackbar("re-create", "control panel", &recreate, 1,  NULL);
 
     
     
@@ -311,6 +315,27 @@ int main ( int argc, char **argv )
     std::vector<Eigen::MatrixXf> gridvec;
     
     
+    
+    cv::Mat imgL = cv::imread(Option.filenameL);
+    cv::Mat imgR = cv::imread(Option.filenameL);
+    int nChannelsL = imgL.channels();
+    int nChannelsR = imgR.channels();
+    assert(nChannelsL == nChannelsR);
+    std::cerr << "nChannelsL " << nChannelsL << std::endl;
+    std::cerr << "nChannelsR " << nChannelsR << std::endl;
+    std::cerr << "WxH " << imgL.size().width << " " << imgL.size().height << std::endl;
+    imshow("left image", imgL);
+    imshow("right image", imgR);
+    
+    size_t nx = imgL.size().width;
+    size_t ny = imgL.size().height;
+    assert(nx > 0);
+    assert(ny > 0);
+    
+    vector<cv::Mat> imgLs, imgRs;
+    cv::split(imgL, imgLs);
+    cv::split(imgR, imgRs);
+
     
     while(1){
         
@@ -320,34 +345,10 @@ int main ( int argc, char **argv )
         // construct a label space with
         // - nx * nx variables
         // - each having numberOfLabels many labels
-//        typedef SimpleDiscreteSpace<size_t, size_t> Space;  // mqpbo does not accept this.
+//      typedef SimpleDiscreteSpace<size_t, size_t> Space;  // mqpbo does not accept this.
         typedef DiscreteSpace<size_t, size_t> Space;
-        Space space((size_t)(nx * nx), numberOfLabels);
-        
-        if(recreate == 1){
-            gridvec.clear();
-            double c[] = {nx/4, nx/2, nx/4*3};
-            Eigen::MatrixXf mygridsum = Eigen::MatrixXf::Zero(nx,nx);
-            for(size_t s = 0; s < numberOfLabels; ++s) {
-                Eigen::MatrixXf mygrid = Eigen::MatrixXf::Zero(nx,nx);
-                for(size_t y = 0; y < nx; ++y)
-                    for(size_t x = 0; x < nx; ++x) {
-                        double p;
-                        p = 0.8 * exp( - ((c[s] - x)*(c[s] - x) + (c[s] - y)*(c[s] - y)) / (nx*2) );
-                        p += noise/10. * (rand() / (double)RAND_MAX);
-                        mygrid(y,x) = p;
-                    }
-                mygridsum += mygrid;
-                gridvec.push_back(mygrid);
-            }
-            for(size_t s = 0; s < numberOfLabels; ++s) {
-                gridvec[s] = gridvec[s].cwiseQuotient(mygridsum);
-            }
-//            cv::setTrackbarPos("re-create", "control panel", 0);
-        }
-        imshow("RGB", gridvec, 1.0);
-        
-        
+        Space space(nx * ny, nD);
+
         // construct a graphical model with
         // - addition as the operation (template parameter Adder)
         // - support for Potts functions (template parameter PottsFunction<double>)
@@ -356,24 +357,143 @@ int main ( int argc, char **argv )
                                Space> Model;
         Model gm(space);
         
-        // for each node (x, y) in the grid, i.e. for each variable
-        // variableIndex(x, y) of the model, add one 1st order functions
-        // and one 1st order factor
-        for(size_t y = 0; y < nx; ++y)
-            for(size_t x = 0; x < nx; ++x) {
-                // function
-                const size_t shape[] = {numberOfLabels};
+        
+        
+        
+//        if(recreate == 1){
+//            gridvec.clear();
+//            double c[] = {nx/4, nx/2, nx/4*3};
+//            Eigen::MatrixXf mygridsum = Eigen::MatrixXf::Zero(nx,nx);
+//            for(size_t s = 0; s < numberOfLabels; ++s) {
+//                Eigen::MatrixXf mygrid = Eigen::MatrixXf::Zero(nx,nx);
+//                for(size_t y = 0; y < nx; ++y)
+//                    for(size_t x = 0; x < nx; ++x) {
+//                        double p;
+//                        p = 0.8 * exp( - ((c[s] - x)*(c[s] - x) + (c[s] - y)*(c[s] - y)) / (nx*2) );
+//                        p += noise/10. * (rand() / (double)RAND_MAX);
+//                        mygrid(y,x) = p;
+//                    }
+//                mygridsum += mygrid;
+//                gridvec.push_back(mygrid);
+//            }
+//            for(size_t s = 0; s < numberOfLabels; ++s) {
+//                gridvec[s] = gridvec[s].cwiseQuotient(mygridsum);
+//            }
+////            cv::setTrackbarPos("re-create", "control panel", 0);
+//        }
+//        imshow("RGB", gridvec, 1.0);
+//        
+//        
+//
+//        
+//        // for each node (x, y) in the grid, i.e. for each variable
+//        // variableIndex(x, y) of the model, add one 1st order functions
+//        // and one 1st order factor
+//        for(size_t y = 0; y < nx; ++y)
+//            for(size_t x = 0; x < nx; ++x) {
+//                // function
+//                const size_t shape[] = {numberOfLabels};
+//                ExplicitFunction<double> f(shape, shape + 1);
+//                for(size_t s = 0; s < numberOfLabels; ++s) {
+//                    double tmp = gridvec[s](y,x);
+//                    f(s) = -log(tmp);
+//                }
+//                Model::FunctionIdentifier fid = gm.addFunction(f);
+//                
+//                // factor
+//                size_t variableIndices[] = {variableIndex(x, y)};
+//                gm.addFactor(fid, variableIndices, variableIndices + 1);
+//            }
+        
+        
+        
+        ////////////////////////////////////////// from mrfstereo of MRF-Lib
+        int birchfield   = 1; // use Birchfield/Tomasi costs
+        int squaredDiffs = 0; // use squared differences
+        int truncDiffs = 255; // truncated differences
+
+        int nColors = std::min(3, nChannelsL);
+        
+        // worst value for sumdiff below
+        int worst_match = nColors * (squaredDiffs ? 255 * 255 : 255);
+        // truncation threshold - NOTE: if squared, don't multiply by nColors (Eucl. dist.)
+        int maxsumdiff = squaredDiffs ? truncDiffs * truncDiffs : nColors * abs(truncDiffs);
+        // value for out-of-bounds matches
+        int badcost = std::min(worst_match, maxsumdiff);
+        
+        int dsiIndex = 0;
+        for (int y = 0; y < ny; y++) {
+            for (int x = 0; x < nx; x++) {
+                //uchar *pix1 = &im1.Pixel(x, y, 0);
+                
+                const size_t shape[] = {nD};
                 ExplicitFunction<double> f(shape, shape + 1);
-                for(size_t s = 0; s < numberOfLabels; ++s) {
-                    double tmp = gridvec[s](y,x);
-                    f(s) = -log(tmp);
+
+                
+                for (int d = 0; d < nD; d++) {
+                    int x2 = x-d;
+                    int dsiValue;
+                    
+                    if (x2 >= 0 && d < nD) { // in bounds
+                        //uchar *pix2 = &im2.Pixel(x2, y, 0);
+                        int sumdiff = 0;
+                        
+                       
+                        for (size_t b = 0; b < nColors; b++) {
+                            int diff = 0;
+                            if (birchfield) {
+                                // Birchfield/Tomasi cost
+                                int im1c = imgLs[b].at<uchar>(y,x);
+                                int im1l = x == 0?    im1c : (im1c + imgLs[b].at<uchar>(y,x-1)) / 2;
+                                int im1r = x == nx-1? im1c : (im1c + imgLs[b].at<uchar>(y,x+1)) / 2;
+                                int im2c = imgRs[b].at<uchar>(y,x);
+                                int im2l = x2 == 0?    im2c : (im2c + imgRs[b].at<uchar>(y,x+1)) / 2;
+                                int im2r = x2 == nx-1? im2c : (im2c + imgRs[b].at<uchar>(y,x+1)) / 2;
+                                int min1 = std::min(im1c, std::min(im1l, im1r));
+                                int max1 = std::max(im1c, std::max(im1l, im1r));
+                                int min2 = std::min(im2c, std::min(im2l, im2r));
+                                int max2 = std::max(im2c, std::max(im2l, im2r));
+                                int di1 = std::max(0, std::max(im1c - max2, min2 - im1c));
+                                int di2 = std::max(0, std::max(im2c - max1, min1 - im2c));
+                                diff = std::min(di1, di2);
+                            } else {
+                                // simple absolute difference
+                                //int di = pix1[b] - pix2[b];
+                                int di = imgLs[b].at<uchar>(y,x) - imgRs[b].at<uchar>(y,x);
+                                diff = abs(di);
+                            }
+                            // square diffs if requested (Birchfield too...)
+                            sumdiff += (squaredDiffs ? diff * diff : diff);
+                        }
+                        // truncate diffs
+                        //dsiValue = std::min(sumdiff, maxsumdiff);
+                        f(d) = std::min(sumdiff, maxsumdiff);
+                    } else { // out of bounds: use maximum truncated cost
+                        //dsiValue = badcost;
+                        f(d) = badcost;
+                    }
+                    
+                    // The cost of pixel p and label l is stored at dsi[p*nLabels+l]
+                    //dsi[dsiIndex++] = dsiValue;
+                    
+                   
                 }
-                Model::FunctionIdentifier fid = gm.addFunction(f);
                 
                 // factor
-                size_t variableIndices[] = {variableIndex(x, y)};
+                Model::FunctionIdentifier fid = gm.addFunction(f);
+                size_t variableIndices[] = {variableIndex(x, y, nx)};
                 gm.addFactor(fid, variableIndices, variableIndices + 1);
+                
+                
             }
+        }
+        
+        //////////////////////////////////////////
+        
+        
+
+    
+        
         
         // add one (!) 2nd order Potts function
 #ifdef WITH_FASTPD
@@ -382,7 +502,7 @@ int main ( int argc, char **argv )
         const double valEqual = -log(lambda/10.);
 #endif
         const double valUnequal = -log( (1.0-lambda/10.) / 2);
-        PottsFunction<double> f(numberOfLabels, numberOfLabels, valEqual, valUnequal);
+        PottsFunction<double> f(nD, nD, valEqual, valUnequal);
         Model::FunctionIdentifier fid = gm.addFunction(f);
         
         // for each pair of nodes (x1, y1), (x2, y2) which are adjacent on the grid,
@@ -391,18 +511,19 @@ int main ( int argc, char **argv )
         for(size_t y = 0; y < nx; ++y)
             for(size_t x = 0; x < nx; ++x) {
                 if(x + 1 < nx) { // (x, y) -- (x + 1, y)
-                    size_t variableIndices[] = {variableIndex(x, y), variableIndex(x + 1, y)};
+                    size_t variableIndices[] = {variableIndex(x, y, nx), variableIndex(x + 1, y, nx)};
                     std::sort(variableIndices, variableIndices + 2);
                     gm.addFactor(fid, variableIndices, variableIndices + 2);
                 }
                 if(y + 1 < nx) { // (x, y) -- (x, y + 1)
-                    size_t variableIndices[] = {variableIndex(x, y), variableIndex(x, y + 1)};
+                    size_t variableIndices[] = {variableIndex(x, y, nx), variableIndex(x, y + 1, nx)};
                     std::sort(variableIndices, variableIndices + 2);
                     gm.addFactor(fid, variableIndices, variableIndices + 2);
                 }
             }
 
-        
+        cv::waitKey(0);
+        exit(1);
 
         std::vector<size_t> labeling(nx * nx);
         
@@ -428,30 +549,6 @@ int main ( int argc, char **argv )
             
             
             
-            Eigen::MatrixXf mygrid0 = Eigen::MatrixXf::Zero(nx,nx);
-            Eigen::MatrixXf mygrid1 = Eigen::MatrixXf::Zero(nx,nx);
-            Eigen::MatrixXf mygrid2 = Eigen::MatrixXf::Zero(nx,nx);
-            std::vector<Eigen::MatrixXf> gridvec3;
-            gridvec3.push_back(mygrid0);
-            gridvec3.push_back(mygrid1);
-            gridvec3.push_back(mygrid2);
-            
-            for(size_t y = 0; y < nx; ++y)
-                for(size_t x = 0; x < nx; ++x) {
-                    BeliefPropagation::IndependentFactorType ift;
-                    bp.marginal(variableIndex(x, y), ift);
-                    std::cerr << "y,x,s " << y << " " << x;
-                    for(size_t s = 0; s < numberOfLabels; ++s) {
-                        std::cerr << " " << ift(s);
-                        gridvec3[s](y,x) = ift(s);
-                        // Estimated label has the least value (that is 0)
-                        // because now the problem is minimizing,
-                        // and marginals are not normalized
-                        // because this is factor graph (undirected), not bayes net (directed).
-                    }
-                    std::cerr << std::endl;
-                }
-            imshow("marginal", gridvec3, 15.0);
             
         }
 
@@ -564,27 +661,6 @@ int main ( int argc, char **argv )
             trbp.arg(labeling);
             //=====================================================
             
-            
-            Eigen::MatrixXf mygrid0 = Eigen::MatrixXf::Zero(nx,nx);
-            Eigen::MatrixXf mygrid1 = Eigen::MatrixXf::Zero(nx,nx);
-            Eigen::MatrixXf mygrid2 = Eigen::MatrixXf::Zero(nx,nx);
-            std::vector<Eigen::MatrixXf> gridvec3;
-            gridvec3.push_back(mygrid0);
-            gridvec3.push_back(mygrid1);
-            gridvec3.push_back(mygrid2);
-            
-            for(size_t y = 0; y < nx; ++y)
-                for(size_t x = 0; x < nx; ++x) {
-                    TRBP::IndependentFactorType ift;
-                    trbp.marginal(variableIndex(x, y), ift);
-                    std::cerr << "y,x,s " << y << " " << x;
-                    for(size_t s = 0; s < numberOfLabels; ++s) {
-                        std::cerr << " " << ift(s);
-                        gridvec3[s](y,x) = ift(s);
-                    }
-                    std::cerr << std::endl;
-                }
-            imshow("marginal", gridvec3, 1.0);
             
             
             
@@ -1040,28 +1116,20 @@ int main ( int argc, char **argv )
         
         
         
-        Eigen::MatrixXf mygrid0 = Eigen::MatrixXf::Zero(nx,nx);
-        Eigen::MatrixXf mygrid1 = Eigen::MatrixXf::Zero(nx,nx);
-        Eigen::MatrixXf mygrid2 = Eigen::MatrixXf::Zero(nx,nx);
-        std::vector<Eigen::MatrixXf> gridvec2;
-        gridvec2.push_back(mygrid0);
-        gridvec2.push_back(mygrid1);
-        gridvec2.push_back(mygrid2);
+        cv::Mat labels(nx, ny, CV_8U);
+        
         
         
         // output the (approximate) argmin
-        size_t variableIndex = 0;
         for(size_t y = 0; y < nx; ++y) {
             for(size_t x = 0; x < nx; ++x) {
                 
-                gridvec2[labeling[variableIndex]](y,x) = 1;
-                
-                ++variableIndex;
+                labels.at<uchar>(y,x) = labeling[variableIndex(x, y, nx)];
                 
             }
         }
         
-        imshow("RGB2", gridvec2, 1.0);
+        imshow("labels", labels);
         
         
         
