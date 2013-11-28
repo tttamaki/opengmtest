@@ -12,6 +12,7 @@ WITH_MRF =
 WITH_FASTPD = 1
 WITH_MPLP = 1
 WITH_GCO = 1
+WITH_SAMPLING = 1
 
 ifdef WITH_LIBDAI
   EXTLIBS += -L$(LIBDAI_LIB) -ldai -lgmp -lgmpxx -DWITH_LIBDAI
@@ -40,7 +41,9 @@ endif
 ifdef WITH_GCO
   EXTLIBS += -I$(OPENGM_EXTSRC)/GCO-v3.0.src-patched/      -lexternal-library-gco     -DWITH_GCO -DGCOENERGYVALUE=double -DGCOLABELVALUE=int
 endif
-
+ifdef WITH_SAMPLING
+  EXTLIBS += -DWITH_SAMPLING
+endif
 
 
 all:  gridcv stereo
