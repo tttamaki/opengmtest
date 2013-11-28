@@ -19,7 +19,7 @@ if (use_BP) {
     BeliefPropagation::VerboseVisitorType visitor;
     bp.infer(visitor);
     bp.arg(labeling);
-    showMarginals(labeling, bp, nx);
+    showMarginals(labeling, bp, nx, sigma);
 }
 
 #ifdef WITH_MAXFLOW
@@ -85,7 +85,7 @@ else if (use_TRBP) {
     TRBP::VerboseVisitorType visitor;
     trbp.infer(visitor);
     trbp.arg(labeling);
-    showMarginals(labeling, trbp, nx);
+    showMarginals(labeling, trbp, nx, sigma);
 }
 
 #ifdef WITH_TRWS
@@ -425,7 +425,7 @@ else if (use_libdai_MF) {  // fixed; libc++abi.dylib: terminate called throwing 
     MeanField::EmptyVisitorType visitor;
     mf.infer(visitor);
     //mf.arg(labeling); // does not work
-    showMarginals(labeling, mf, nx);
+    showMarginals(labeling, mf, nx, sigma);
 }
 
 #endif

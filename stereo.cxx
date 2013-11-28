@@ -119,7 +119,7 @@ int main ( int argc, char **argv )
     int nD = 16; // number of disparities
     cv::createTrackbar("nD", "control panel", &nD, 50,  NULL);
 
-    
+    int sigma = 10; // unused now;
     
     
     

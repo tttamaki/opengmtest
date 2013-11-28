@@ -12,6 +12,34 @@
 
 #include "opengmtest.h"
 
+void
+imshow(const std::string &title,
+       const Eigen::MatrixXf &img,
+       bool pseudocolor = false)
+{
+    assert (title != "");
+    assert (img.cols() > 0);
+    assert (img.rows() > 0);
+    
+    if(pseudocolor){
+        Eigen::MatrixXf angle;
+        angle = img*180.;
+        cv::Mat _hsv[3], hsv;
+        cv::eigen2cv( angle, _hsv[0]);
+        _hsv[0] = _hsv[0] + 20;
+        _hsv[1] = cv::Mat::ones(_hsv[0].size(), CV_32F);
+        _hsv[2] = cv::Mat::ones(_hsv[0].size(), CV_32F);
+        
+        cv::merge(_hsv, 3, hsv);
+        cv::Mat bgr;
+        cv::cvtColor(hsv, bgr, cv::COLOR_HSV2BGR);
+        cv::imshow(title, bgr);
+    }else{
+        cv::Mat imgCV;
+        cv::eigen2cv(img, imgCV);
+        cv::imshow(title, imgCV);
+    }
+}
 
 void
 imshow(const std::string &title,
@@ -54,7 +82,8 @@ template <class INF>
 void
 showMarginals(const std::vector<size_t> &labeling,
               const INF &inf,
-              const int nx)
+              const int nx,
+              const double sigma)
 {
     Eigen::MatrixXf mygrid0 = Eigen::MatrixXf::Zero(nx,nx);
     Eigen::MatrixXf mygrid1 = Eigen::MatrixXf::Zero(nx,nx);
@@ -64,6 +93,8 @@ showMarginals(const std::vector<size_t> &labeling,
     gridvec3.push_back(mygrid1);
     gridvec3.push_back(mygrid2);
     
+    Eigen::MatrixXf entropy = Eigen::MatrixXf::Zero(nx,nx);
+
     for(size_t y = 0; y < nx; ++y)
         for(size_t x = 0; x < nx; ++x) {
             typename INF::IndependentFactorType ift;
@@ -76,16 +107,26 @@ showMarginals(const std::vector<size_t> &labeling,
 //                because now the problem is minimizing,
 //                and marginals are not normalized
 //                because this is factor graph (undirected), not bayes net (directed).
-                sum += std::exp(-ift(s)/5);
+                double p = std::exp(-ift(s)/sigma);
+                gridvec3[s](y,x) = p;
+                sum += p;
+                
+                entropy(y,x) += (-p * std::log(p));
             }
             for(size_t s = 0; s < numberOfLabels; ++s) {
-                gridvec3[s](y,x) = std::exp(-ift(s)/5) / sum;
+                gridvec3[s](y,x) /= sum;
                 std::cerr << " " << gridvec3[s](y,x);
             }
+            std::cerr << " " << entropy(y,x);
             std::cerr << std::endl;
         }
-    imshow("marginal", gridvec3, 1.0);
+    double maxval = entropy.maxCoeff();
+    double minval = entropy.minCoeff();
+    entropy.array() -= minval;
+    entropy *= (maxval - minval);
     
+    imshow("marginal", gridvec3, 1.0);
+    imshow("entropy", entropy);
 }
 
 
@@ -110,7 +151,9 @@ int main() {
     int recreate = 1;
     cv::createTrackbar("re-create", "control panel", &recreate, 1,  NULL);
 
-    
+    int sigma = 1;
+    cv::createTrackbar("sigma", "control panel", &sigma, 100,  NULL);
+
     
     
     std::vector<Eigen::MatrixXf> gridvec;

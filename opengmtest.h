@@ -25,6 +25,7 @@
 #include <Eigen/Dense>
 #include <Eigen/SVD>
 #include <Eigen/Eigenvalues>
+#include <Eigen/Core>
 #include <opencv2/core/eigen.hpp>
 
 
