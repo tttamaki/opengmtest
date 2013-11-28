@@ -69,17 +69,22 @@ showMarginals(const std::vector<size_t> &labeling,
             typename INF::IndependentFactorType ift;
             inf.marginal(variableIndex(x, y), ift);
             std::cerr << "y,x,s " << y << " " << x;
+            double sum = 0;
             for(size_t s = 0; s < numberOfLabels; ++s) {
                 std::cerr << " " << ift(s);
-                gridvec3[s](y,x) = ift(s);
 //                Estimated label has the least value (that is 0)
 //                because now the problem is minimizing,
 //                and marginals are not normalized
 //                because this is factor graph (undirected), not bayes net (directed).
+                sum += std::exp(-ift(s)/5);
+            }
+            for(size_t s = 0; s < numberOfLabels; ++s) {
+                gridvec3[s](y,x) = std::exp(-ift(s)/5) / sum;
+                std::cerr << " " << gridvec3[s](y,x);
             }
             std::cerr << std::endl;
         }
-    imshow("marginal", gridvec3, 15.0);
+    imshow("marginal", gridvec3, 1.0);
     
 }
 
