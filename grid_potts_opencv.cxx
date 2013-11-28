@@ -866,7 +866,7 @@ int main() {
             // DoubleLoopGeneralizedBP::Init = UNIFORM | RANDOM
             const DoubleLoopGeneralizedBP::Init init = DoubleLoopGeneralizedBP::UNIFORM;
             
-            const size_t maxiter=10000;
+            const size_t maxiter=3;//10000;
             const double tolerance=1e-9;
             const size_t verboseLevel=10;
             DoubleLoopGeneralizedBP::Parameter parameter(doubleloop, clusters, loopdepth, init, maxiter, tolerance, verboseLevel);
@@ -901,6 +901,7 @@ int main() {
         }
         
 
+        
         
         
         
@@ -946,10 +947,10 @@ int main() {
             
             typedef external::libdai::Gibbs<Model, opengm::Minimizer> Gibbs;
             
-            const size_t maxiter = 10000;
-            const size_t burnin  = 100;
-            const size_t restart = 10000;
-            const size_t verbose = 10;
+            const size_t maxiter = 100;
+            const size_t burnin  = 10;
+            const size_t restart = 20;
+            const size_t verbose = 0;
             Gibbs::Parameter parameter(maxiter, burnin, restart, verbose);
             Gibbs gibbs(gm, parameter);
             
@@ -966,7 +967,7 @@ int main() {
             
             const size_t maxiter=10000;
             const double damping=0.2;
-            const double tolerance=1e-9;
+            const double tolerance=1e-1;
             // MeanField::UpdateRule = NAIVE | HARDSPIN
             const MeanField::UpdateRule updateRule = MeanField::NAIVE;
             // MeanField::Init = UNIFORM | RANDOM
@@ -975,11 +976,48 @@ int main() {
             MeanField::Parameter parameter(maxiter,damping,tolerance,updateRule,init,verboseLevel);
             MeanField mf(gm, parameter);
             
-            MeanField::VerboseVisitorType visitor;
+            MeanField::EmptyVisitorType visitor;
             mf.infer(visitor);
             
             // obtain the (approximate) argmin
-            mf.arg(labeling);
+            //mf.arg(labeling);
+            
+            
+            
+            Eigen::MatrixXf mygrid0 = Eigen::MatrixXf::Zero(nx,nx);
+            Eigen::MatrixXf mygrid1 = Eigen::MatrixXf::Zero(nx,nx);
+            Eigen::MatrixXf mygrid2 = Eigen::MatrixXf::Zero(nx,nx);
+            std::vector<Eigen::MatrixXf> gridvec3;
+            gridvec3.push_back(mygrid0);
+            gridvec3.push_back(mygrid1);
+            gridvec3.push_back(mygrid2);
+            
+            for(size_t y = 0; y < nx; ++y)
+                for(size_t x = 0; x < nx; ++x) {
+                    MeanField::IndependentFactorType ift;
+                    mf.marginal(variableIndex(x, y), ift);
+                    std::cerr << "y,x,s " << y << " " << x;
+                    for(size_t s = 0; s < numberOfLabels; ++s) {
+                        std::cerr << " " << ift(s);
+                        gridvec3[s](y,x) = ift(s);
+                        // Estimated label has the least value (that is 0)
+                        // because now the problem is minimizing,
+                        // and marginals are not normalized
+                        // because this is factor graph (undirected), not bayes net (directed).
+                    }
+                    std::cerr << std::endl;
+                }
+            imshow("marginal", gridvec3, 15.0);
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
         }
 #endif
         

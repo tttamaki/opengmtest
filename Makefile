@@ -3,7 +3,7 @@ OPENGM_EXTLIB = /Users/tamaki/dev/opengm/build/src/external
 LIBDAI_LIB    = /Users/tamaki/dev/libdai/lib
 EXTLIBS = -lboost_program_options-mt
 
-WITH_LIBDAI =
+WITH_LIBDAI = 1
 WITH_MAXFLOW = 1
 WITH_QPBO = 1
 WITH_TRWS = 1
@@ -57,3 +57,5 @@ stereo: stereo.cxx
 	`pkg-config --cflags opencv eigen3` `pkg-config --libs opencv eigen3` \
 	-L$(OPENGM_EXTLIB) $(EXTLIBS)
 
+clean:
+	rm grid_potts_opencv stereo

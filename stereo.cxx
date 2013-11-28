@@ -1085,10 +1085,10 @@ int main ( int argc, char **argv )
             
             typedef external::libdai::Gibbs<Model, opengm::Minimizer> Gibbs;
             
-            const size_t maxiter = 10000;
-            const size_t burnin  = 100;
-            const size_t restart = 10000;
-            const size_t verbose = 10;
+            const size_t maxiter = 100;
+            const size_t burnin  = 10;
+            const size_t restart = 20;
+            const size_t verbose = 0;
             Gibbs::Parameter parameter(maxiter, burnin, restart, verbose);
             Gibbs gibbs(gm, parameter);
             
