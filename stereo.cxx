@@ -116,7 +116,8 @@ int main ( int argc, char **argv )
   
     
     
-    size_t nD = 16; // number of disparities
+    int nD = 16; // number of disparities
+    cv::createTrackbar("nD", "control panel", &nD, 50,  NULL);
 
     
     
@@ -159,7 +160,7 @@ int main ( int argc, char **argv )
         // - each having numberOfLabels many labels
 //      typedef SimpleDiscreteSpace<size_t, size_t> Space;  // mqpbo does not accept this.
         typedef opengm::DiscreteSpace<size_t, size_t> Space;
-        Space space(nx * ny, nD);
+        Space space(nx * ny, (size_t)nD);
 
         // construct a graphical model with
         // - addition as the operation (template parameter Adder)
@@ -194,7 +195,7 @@ int main ( int argc, char **argv )
             for (int x = 0; x < nx; x++) {
                 //uchar *pix1 = &im1.Pixel(x, y, 0);
                 
-                const size_t shape[] = {nD};
+                const size_t shape[] = {(int)nD};
                 opengm::ExplicitFunction<double> f(shape, shape + 1);
 
                 
