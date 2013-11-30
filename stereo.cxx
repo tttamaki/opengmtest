@@ -95,7 +95,8 @@ template <class INF>
 void
 showMarginals(const std::vector<size_t> &labeling,
               const INF &inf,
-              const int nx)
+              const int nx,
+              const int sigma)
 {
     // empty
 }
