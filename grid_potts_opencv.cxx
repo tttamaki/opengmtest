@@ -174,14 +174,15 @@ int main() {
         
         if(recreate == 1){
             gridvec.clear();
-            double c[] = {nx/4, nx/2, nx/4*3};
+            double cx[] = {nx/4, nx/4*3, nx/4*3};
+            double cy[] = {nx/4, nx/4,   nx/4*3};
             Eigen::MatrixXf mygridsum = Eigen::MatrixXf::Zero(nx,nx);
             for(size_t s = 0; s < numberOfLabels; ++s) {
                 Eigen::MatrixXf mygrid = Eigen::MatrixXf::Zero(nx,nx);
                 for(size_t y = 0; y < nx; ++y)
                     for(size_t x = 0; x < nx; ++x) {
                         double p;
-                        p = 0.8 * exp( - ((c[s] - x)*(c[s] - x) + (c[s] - y)*(c[s] - y)) / (nx*2) );
+                        p = 0.8 * exp( - ((cx[s] - x)*(cx[s] - x) + (cy[s] - y)*(cy[s] - y)) / (nx*2) );
                         p += noise/10. * (rand() / (double)RAND_MAX);
                         mygrid(y,x) = p;
                     }
