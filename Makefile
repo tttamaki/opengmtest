@@ -1,7 +1,7 @@
 OPENGM_EXTSRC = /Users/tamaki/dev/opengm/src/external
 OPENGM_EXTLIB = /Users/tamaki/dev/opengm/build/src/external
 LIBDAI_LIB    = /Users/tamaki/dev/libdai/lib
-EXTLIBS = -lboost_program_options-mt
+EXTLIBS =
 
 WITH_LIBDAI = 1
 WITH_MAXFLOW = 1
@@ -46,19 +46,25 @@ ifdef WITH_SAMPLING
 endif
 
 
+OPTIONS = -L/opt/local/lib -I/usr/local/include \
+			`pkg-config --cflags opencv eigen3` `pkg-config --libs opencv eigen3` \
+			-L$(OPENGM_EXTLIB) $(EXTLIBS) $(CFLAGS)
+ifdef DEBUG
+  OPTIONS+= -O0 -g -DDEBUG
+else
+  OPTIONS+= -O3 -DNDEBUG
+endif
+
 all:  gridcv stereo
 
 gridcv: grid_potts_opencv.cxx
 	g++ -o grid_potts_opencv grid_potts_opencv.cxx \
-	-L/opt/local/lib -I/usr/local/include -O3 -DNDEBUG \
-	`pkg-config --cflags opencv eigen3` `pkg-config --libs opencv eigen3` \
-	-L$(OPENGM_EXTLIB) $(EXTLIBS)
+	$(OPTIONS)
 
 stereo: stereo.cxx
 	g++ -o stereo stereo.cxx \
-	-L/opt/local/lib -I/usr/local/include -O3 -DNDEBUG \
-	`pkg-config --cflags opencv eigen3` `pkg-config --libs opencv eigen3` \
-	-L$(OPENGM_EXTLIB) $(EXTLIBS)
+	 -lboost_program_options-mt \
+	$(OPTIONS)
 
 clean:
 	rm grid_potts_opencv stereo

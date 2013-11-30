@@ -43,7 +43,7 @@ imshow(const std::string &title,
 
 void
 imshow(const std::string &title,
-       const std::vector<Eigen::MatrixXf> gridvec,
+       const std::vector<Eigen::MatrixXf> &gridvec,
        const float maxval)
 {
     
@@ -64,7 +64,7 @@ imshow(const std::string &title,
 
 // model parameters (global variables are used only in example code)
 int nx = 100; // width/height of the grid
-size_t numberOfLabels = 3; // just for RGB
+size_t numberOfLabels = 4; // just for RGB
 int lambda = 8; //  x0.1  // coupling strength of the Potts model
 
 // this function maps a node (x, y) in the grid to a unique variable index
@@ -85,13 +85,11 @@ showMarginals(const std::vector<size_t> &labeling,
               const int nx,
               const double sigma)
 {
-    Eigen::MatrixXf mygrid0 = Eigen::MatrixXf::Zero(nx,nx);
-    Eigen::MatrixXf mygrid1 = Eigen::MatrixXf::Zero(nx,nx);
-    Eigen::MatrixXf mygrid2 = Eigen::MatrixXf::Zero(nx,nx);
     std::vector<Eigen::MatrixXf> gridvec3;
-    gridvec3.push_back(mygrid0);
-    gridvec3.push_back(mygrid1);
-    gridvec3.push_back(mygrid2);
+    for(size_t s = 0; s < numberOfLabels; ++s) {
+        Eigen::MatrixXf mygrid = Eigen::MatrixXf::Zero(nx,nx);
+        gridvec3.push_back(mygrid);
+    }
     
     Eigen::MatrixXf entropy = Eigen::MatrixXf::Zero(nx,nx);
 
@@ -99,10 +97,10 @@ showMarginals(const std::vector<size_t> &labeling,
         for(size_t x = 0; x < nx; ++x) {
             typename INF::IndependentFactorType ift;
             inf.marginal(variableIndex(x, y), ift);
-            std::cerr << "y,x,s " << y << " " << x;
+            //std::cerr << "y,x,s " << y << " " << x;
             double sum = 0;
             for(size_t s = 0; s < numberOfLabels; ++s) {
-                std::cerr << " " << ift(s);
+                //std::cerr << " " << ift(s);
 //                Estimated label has the least value (that is 0)
 //                because now the problem is minimizing,
 //                and marginals are not normalized
@@ -115,10 +113,10 @@ showMarginals(const std::vector<size_t> &labeling,
             }
             for(size_t s = 0; s < numberOfLabels; ++s) {
                 gridvec3[s](y,x) /= sum;
-                std::cerr << " " << gridvec3[s](y,x);
+                //std::cerr << " " << gridvec3[s](y,x);
             }
-            std::cerr << " " << entropy(y,x);
-            std::cerr << std::endl;
+            //std::cerr << " " << entropy(y,x);
+            //std::cerr << std::endl;
         }
     double maxval = entropy.maxCoeff();
     double minval = entropy.minCoeff();
@@ -156,19 +154,18 @@ int main() {
 
     
     
-    std::vector<Eigen::MatrixXf> gridvec;
     
+    std::vector<Eigen::MatrixXf> gridvec;
     
     
     while(1){
         
-
         
-        
+       
         // construct a label space with
         // - nx * nx variables
         // - each having numberOfLabels many labels
-//        typedef SimpleDiscreteSpace<size_t, size_t> Space;  // mqpbo does not accept this.
+//      typedef opengm::SimpleDiscreteSpace<size_t, size_t> Space;  // mqpbo does not accept this.
         typedef opengm::DiscreteSpace<size_t, size_t> Space;
         Space space((size_t)(nx * nx), numberOfLabels);
         
@@ -177,7 +174,7 @@ int main() {
             double cx[] = {nx/4, nx/4*3, nx/4*3};
             double cy[] = {nx/4, nx/4,   nx/4*3};
             Eigen::MatrixXf mygridsum = Eigen::MatrixXf::Zero(nx,nx);
-            for(size_t s = 0; s < numberOfLabels; ++s) {
+            for(size_t s = 0; s < numberOfLabels-1; ++s) {
                 Eigen::MatrixXf mygrid = Eigen::MatrixXf::Zero(nx,nx);
                 for(size_t y = 0; y < nx; ++y)
                     for(size_t x = 0; x < nx; ++x) {
@@ -188,6 +185,23 @@ int main() {
                     }
                 mygridsum += mygrid;
                 gridvec.push_back(mygrid);
+            }
+            {
+                Eigen::MatrixXf mygrid = Eigen::MatrixXf::Zero(nx,nx);
+                for(size_t y = 0; y < nx; ++y)
+                    for(size_t x = 0; x < nx; ++x) {
+                        mygrid(y,x) = 0.2;
+                        //mygrid(y,x) = 0.5 * (rand() / (double)RAND_MAX);
+//                        mygrid(y,x) = 0;
+//                        for(size_t s = 0; s < numberOfLabels-1; ++s) {
+//                            double p = gridvec[s](y,x);
+//                            mygrid(y,x) += -p * std::log(p);
+//                        }
+//                        mygrid(y,x) *= 0.5;
+                    }
+                mygridsum += mygrid;
+                gridvec.push_back(mygrid);
+
             }
             for(size_t s = 0; s < numberOfLabels; ++s) {
                 gridvec[s] = gridvec[s].cwiseQuotient(mygridsum);
@@ -260,13 +274,11 @@ int main() {
         
         
         
-        Eigen::MatrixXf mygrid0 = Eigen::MatrixXf::Zero(nx,nx);
-        Eigen::MatrixXf mygrid1 = Eigen::MatrixXf::Zero(nx,nx);
-        Eigen::MatrixXf mygrid2 = Eigen::MatrixXf::Zero(nx,nx);
         std::vector<Eigen::MatrixXf> gridvec2;
-        gridvec2.push_back(mygrid0);
-        gridvec2.push_back(mygrid1);
-        gridvec2.push_back(mygrid2);
+        for(size_t s = 0; s < numberOfLabels; ++s) {
+            Eigen::MatrixXf mygrid = Eigen::MatrixXf::Zero(nx,nx);
+            gridvec2.push_back(mygrid);
+        }
         
         
         // output the (approximate) argmin

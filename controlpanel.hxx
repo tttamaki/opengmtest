@@ -21,6 +21,7 @@ int use_icm = 0;
 cv::createTrackbar("ICM", "control panel", &use_icm, 1,  NULL);
 int use_lazyFlipper = 0;
 cv::createTrackbar("LazyFlipper", "control panel", &use_lazyFlipper, 1,  NULL);
+
 #ifdef WITH_AD3
 int use_loc = 0;
 cv::createTrackbar("LOC", "control panel", &use_loc, 1,  NULL);
@@ -44,6 +45,7 @@ cv::createTrackbar("SW", "control panel", &use_SwendsenWang, 1,  NULL);
 
 int use_DP = 0;
 cv::createTrackbar("DP", "control panel", &use_DP, 1,  NULL);
+
 #ifdef WITH_QPBO
 int use_MQPBO = 0;
 cv::createTrackbar("MQPBO", "control panel", &use_MQPBO, 1,  NULL);
@@ -65,6 +67,7 @@ cv::createTrackbar("MRFLIB BPS", "control panel", &use_MRFLIB_BPS, 1,  NULL);
 int use_MRFLIB_TRWS = 0;
 cv::createTrackbar("MRFLIB TRWS", "control panel", &use_MRFLIB_TRWS, 1,  NULL);
 #endif
+
 int use_DD_subgradient = 0;
 cv::createTrackbar("DD subgrad", "control panel", &use_DD_subgradient, 1,  NULL);
 

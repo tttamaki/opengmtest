@@ -256,56 +256,6 @@ else if (use_DD_subgradient) {
     ddsg.arg(labeling);
 }
 
-#ifdef WITH_FASTPD
-else if (use_fastPD) {
-    typedef opengm::external::FastPD<Model> fastPD;
-    fastPD::Parameter param;
-    param.numberOfIterations_ = 1000;
-    fastPD fastpd(gm, param);
-    fastPD::VerboseVisitorType visitor;
-    fastpd.infer(visitor);
-    fastpd.arg(labeling);
-}
-#endif
-
-#ifdef WITH_MPLP
-else if (use_MPLP) {
-    typedef opengm::external::MPLP<Model> Mplp;
-    Mplp::Parameter param;
-    param.maxTime_ = 120;
-    Mplp mplp(gm, param);
-    Mplp::VerboseVisitorType visitor;
-    mplp.infer(visitor);
-    mplp.arg(labeling);
-}
-#endif
-
-#ifdef WITH_GCO
-else if (use_GCO_aexp) {
-    typedef opengm::external::GCOLIB<Model> GCO;
-    GCO::Parameter param;
-    param.inferenceType_ = GCO::Parameter::EXPANSION; // EXPANSION, SWAP
-    param.energyType_ = GCO::Parameter::VIEW; // VIEW, TABLES, WEIGHTEDTABLE
-    param.useAdaptiveCycles_ = false; // for alpha-expansion
-    GCO gco(gm, param);
-    GCO::VerboseVisitorType visitor;
-    gco.infer(visitor);
-    gco.arg(labeling);
-}
-
-else if (use_GCO_swap) {
-    typedef opengm::external::GCOLIB<Model> GCO;
-    GCO::Parameter param;
-    param.inferenceType_ = GCO::Parameter::SWAP; // EXPANSION, SWAP
-    param.energyType_ = GCO::Parameter::VIEW; // VIEW, TABLES, WEIGHTEDTABLE
-    GCO gco(gm, param);
-    GCO::VerboseVisitorType visitor;
-    gco.infer(visitor);
-    gco.arg(labeling);
-}
-#endif
-
-
 #ifdef WITH_LIBDAI
 else if (use_libdai_BP) {
     typedef opengm::external::libdai::Bp<Model, opengm::Minimizer> BP;
@@ -369,20 +319,6 @@ else if (use_libdai_FBP) {
     fbp.arg(labeling);
 }
 
-else if (use_libdai_TEP) {
-    typedef opengm::external::libdai::TreeExpectationPropagation<Model, opengm::Minimizer> TreeExpectationPropagation;
-    //TreeExpectationPropagation::TreeEpType = ORG | ALT
-    TreeExpectationPropagation::TreeEpType treeEpTyp=TreeExpectationPropagation::ORG;
-    const size_t maxiter=10000;
-    const double tolerance=1e-9;
-    size_t verboseLevel=10;
-    TreeExpectationPropagation::Parameter parameter(treeEpTyp, maxiter, tolerance, verboseLevel);
-    TreeExpectationPropagation treeep(gm, parameter);
-    TreeExpectationPropagation::VerboseVisitorType visitor;
-    treeep.infer(visitor);
-    treeep.arg(labeling);
-}
-
 else if (use_libdai_JT) {
     typedef opengm::external::libdai::JunctionTree<Model, opengm::Minimizer> JunctionTree;
     // JunctionTree::UpdateRule = HUGIN | SHSH
@@ -395,6 +331,20 @@ else if (use_libdai_JT) {
     JunctionTree::VerboseVisitorType visitor;
     jt.infer(visitor);
     jt.arg(labeling);
+}
+
+else if (use_libdai_TEP) {
+    typedef opengm::external::libdai::TreeExpectationPropagation<Model, opengm::Minimizer> TreeExpectationPropagation;
+    //TreeExpectationPropagation::TreeEpType = ORG | ALT
+    TreeExpectationPropagation::TreeEpType treeEpTyp=TreeExpectationPropagation::ORG;
+    const size_t maxiter=100;
+    const double tolerance=1e-9;
+    size_t verboseLevel=10;
+    TreeExpectationPropagation::Parameter parameter(treeEpTyp, maxiter, tolerance, verboseLevel);
+    TreeExpectationPropagation treeep(gm, parameter);
+    TreeExpectationPropagation::VerboseVisitorType visitor;
+    treeep.infer(visitor);
+    treeep.arg(labeling);
 }
 
 else if (use_libdai_Gibbs) {
@@ -430,7 +380,54 @@ else if (use_libdai_MF) {  // fixed; libc++abi.dylib: terminate called throwing 
 
 #endif
 
+#ifdef WITH_FASTPD
+else if (use_fastPD) {
+    typedef opengm::external::FastPD<Model> fastPD;
+    fastPD::Parameter param;
+    param.numberOfIterations_ = 1000;
+    fastPD fastpd(gm, param);
+    fastPD::VerboseVisitorType visitor;
+    fastpd.infer(visitor);
+    fastpd.arg(labeling);
+}
+#endif
 
+#ifdef WITH_MPLP
+else if (use_MPLP) {
+    typedef opengm::external::MPLP<Model> Mplp;
+    Mplp::Parameter param;
+    param.maxTime_ = 120;
+    Mplp mplp(gm, param);
+    Mplp::VerboseVisitorType visitor;
+    mplp.infer(visitor);
+    mplp.arg(labeling);
+}
+#endif
+
+#ifdef WITH_GCO
+else if (use_GCO_aexp) {
+    typedef opengm::external::GCOLIB<Model> GCO;
+    GCO::Parameter param;
+    param.inferenceType_ = GCO::Parameter::EXPANSION; // EXPANSION, SWAP
+    param.energyType_ = GCO::Parameter::VIEW; // VIEW, TABLES, WEIGHTEDTABLE
+    param.useAdaptiveCycles_ = false; // for alpha-expansion
+    GCO gco(gm, param);
+    GCO::VerboseVisitorType visitor;
+    gco.infer(visitor);
+    gco.arg(labeling);
+}
+
+else if (use_GCO_swap) {
+    typedef opengm::external::GCOLIB<Model> GCO;
+    GCO::Parameter param;
+    param.inferenceType_ = GCO::Parameter::SWAP; // EXPANSION, SWAP
+    param.energyType_ = GCO::Parameter::VIEW; // VIEW, TABLES, WEIGHTEDTABLE
+    GCO gco(gm, param);
+    GCO::VerboseVisitorType visitor;
+    gco.infer(visitor);
+    gco.arg(labeling);
+}
+#endif
 
 
 #endif
