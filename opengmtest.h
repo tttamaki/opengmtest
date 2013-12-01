@@ -59,6 +59,19 @@
 #include <opengm/inference/auxiliary/minstcutkolmogorov.hxx>
 #endif
 
+#ifdef WITH_MAXFLOW_IBFS
+#include <opengm/inference/graphcut.hxx>
+#include <opengm/inference/alphabetaswap.hxx>
+#include <opengm/inference/alphaexpansion.hxx>
+#include <opengm/inference/auxiliary/minstcutibfs.hxx>
+#endif
+
+#ifdef WITH_BOOST
+#include <opengm/inference/graphcut.hxx>
+#include <opengm/inference/alphabetaswap.hxx>
+#include <opengm/inference/alphaexpansion.hxx>
+#include <opengm/inference/auxiliary/minstcutboost.hxx>
+#endif
 
 
 #ifdef WITH_AD3
@@ -106,6 +119,10 @@
 
 #ifdef WITH_GCO
 #include <opengm/inference/external/gco.hxx> // can't be complied with WITH_MRF at the same time because two files of the same name "GCoptimization.h" conflicts to each other.
+#endif
+
+#if defined(WITH_QPBO) && defined(WITH_AD3)
+#include <opengm/inference/auxiliary/fusion_move/fusion_mover.hxx>
 #endif
 
 

@@ -7,14 +7,28 @@
 #define opengmtest_controlpanel_hxx
 
 
-int use_BP = 0;
+int use_BP = 1;
 cv::createTrackbar("BP", "control panel", &use_BP, 1,  NULL);
 
 #ifdef WITH_MAXFLOW
-int use_ab_graphcut = 1;
-cv::createTrackbar("a-b GC", "control panel", &use_ab_graphcut, 1,  NULL);
+int use_ab_graphcut = 0;
+cv::createTrackbar("a-b GC (Kol)", "control panel", &use_ab_graphcut, 1,  NULL);
 int use_aexp_graphcut = 0;
-cv::createTrackbar("a-exp GC", "control panel", &use_aexp_graphcut, 1,  NULL);
+cv::createTrackbar("a-exp GC (Kol)", "control panel", &use_aexp_graphcut, 1,  NULL);
+#endif
+
+#ifdef WITH_MAXFLOW_IBFS
+int use_ab_graphcut_ibfs = 0;
+cv::createTrackbar("a-b GC (IBFS)", "control panel", &use_ab_graphcut_ibfs, 1,  NULL);
+int use_aexp_graphcut_ibfs = 0;
+cv::createTrackbar("a-exp GC (IBFS)", "control panel", &use_aexp_graphcut_ibfs, 1,  NULL);
+#endif
+
+#ifdef WITH_BOOST
+int use_ab_graphcut_boost = 0;
+cv::createTrackbar("a-b GC (Boost)", "control panel", &use_ab_graphcut_boost, 1,  NULL);
+int use_aexp_graphcut_boost = 0;
+cv::createTrackbar("a-exp GC (Boost)", "control panel", &use_aexp_graphcut_boost, 1,  NULL);
 #endif
 
 int use_icm = 0;

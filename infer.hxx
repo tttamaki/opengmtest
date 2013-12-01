@@ -44,6 +44,50 @@ else if (use_aexp_graphcut) {
 }
 #endif
 
+#ifdef WITH_MAXFLOW_IBFS
+else if (use_ab_graphcut_ibfs) {
+    typedef opengm::external::MinSTCutIBFS<size_t, double> MinStCutType;
+    typedef opengm::GraphCut<Model, opengm::Minimizer, MinStCutType> MinGraphCut;
+    typedef opengm::AlphaBetaSwap<Model, MinGraphCut> MinAlphaBetaSwap;
+    MinAlphaBetaSwap abs(gm);
+    MinAlphaBetaSwap::VerboseVisitorType visitor;
+    abs.infer(visitor);
+    abs.arg(labeling);
+}
+
+else if (use_aexp_graphcut_ibfs) {
+    typedef opengm::external::MinSTCutIBFS<size_t, double> MinStCutType;
+    typedef opengm::GraphCut<Model, opengm::Minimizer, MinStCutType> MinGraphCut;
+    typedef opengm::AlphaExpansion<Model, MinGraphCut> MinAlphaExpansion;
+    MinAlphaExpansion aexp(gm);
+    MinAlphaExpansion::VerboseVisitorType visitor;
+    aexp.infer(visitor);
+    aexp.arg(labeling);
+}
+#endif
+
+#ifdef WITH_BOOST
+else if (use_ab_graphcut_boost) {
+    typedef opengm::MinSTCutBoost<size_t, double> MinStCutType;
+    typedef opengm::GraphCut<Model, opengm::Minimizer, MinStCutType> MinGraphCut;
+    typedef opengm::AlphaBetaSwap<Model, MinGraphCut> MinAlphaBetaSwap;
+    MinAlphaBetaSwap abs(gm);
+    MinAlphaBetaSwap::VerboseVisitorType visitor;
+    abs.infer(visitor);
+    abs.arg(labeling);
+}
+
+else if (use_aexp_graphcut_boost) {
+    typedef opengm::MinSTCutBoost<size_t, double> MinStCutType;
+    typedef opengm::GraphCut<Model, opengm::Minimizer, MinStCutType> MinGraphCut;
+    typedef opengm::AlphaExpansion<Model, MinGraphCut> MinAlphaExpansion;
+    MinAlphaExpansion aexp(gm);
+    MinAlphaExpansion::VerboseVisitorType visitor;
+    aexp.infer(visitor);
+    aexp.arg(labeling);
+}
+#endif
+
 else if (use_icm) {
     typedef opengm::ICM<Model, opengm::Minimizer> MinICM;
     MinICM icm(gm);
@@ -428,6 +472,25 @@ else if (use_GCO_swap) {
     gco.arg(labeling);
 }
 #endif
+
+
+#if defined(WITH_QPBO) && defined(WITH_AD3)
+//int use_fusion_move = 0;
+else if (0) { // still unknown how to use
+    typedef opengm::FusionMover<Model, opengm::Minimizer> FusionMover;
+    FusionMover fusionmove(gm);
+}
+#endif
+
+
+
+
+
+
+
+
+
+
 
 
 #endif
