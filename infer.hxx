@@ -6,6 +6,9 @@
 #ifndef opengmtest_infer_hxx
 #define opengmtest_infer_hxx
 
+#define VISITOR_TYPE VerboseVisitorType
+//#define VISITOR_TYPE TimingVisitorType
+//#define VISITOR_TYPE EmptyVisitorType
 
 if (use_BP) {
 
@@ -16,7 +19,7 @@ if (use_BP) {
     const double damping = 0.5;
     BeliefPropagation::Parameter parameter(maxNumberOfIterations, convergenceBound, damping);
     BeliefPropagation bp(gm, parameter);
-    BeliefPropagation::VerboseVisitorType visitor;
+    BeliefPropagation::VISITOR_TYPE visitor;
     bp.infer(visitor);
     bp.arg(labeling);
     showMarginals(labeling, bp, nx, sigma);
@@ -28,7 +31,7 @@ else if (use_ab_graphcut) {
     typedef opengm::GraphCut<Model, opengm::Minimizer, MinStCutType> MinGraphCut;
     typedef opengm::AlphaBetaSwap<Model, MinGraphCut> MinAlphaBetaSwap;
     MinAlphaBetaSwap abs(gm);
-    MinAlphaBetaSwap::VerboseVisitorType visitor;
+    MinAlphaBetaSwap::VISITOR_TYPE visitor;
     abs.infer(visitor);
     abs.arg(labeling);
 }
@@ -38,7 +41,7 @@ else if (use_aexp_graphcut) {
     typedef opengm::GraphCut<Model, opengm::Minimizer, MinStCutType> MinGraphCut;
     typedef opengm::AlphaExpansion<Model, MinGraphCut> MinAlphaExpansion;
     MinAlphaExpansion aexp(gm);
-    MinAlphaExpansion::VerboseVisitorType visitor;
+    MinAlphaExpansion::VISITOR_TYPE visitor;
     aexp.infer(visitor);
     aexp.arg(labeling);
 }
@@ -50,7 +53,7 @@ else if (use_ab_graphcut_ibfs) {
     typedef opengm::GraphCut<Model, opengm::Minimizer, MinStCutType> MinGraphCut;
     typedef opengm::AlphaBetaSwap<Model, MinGraphCut> MinAlphaBetaSwap;
     MinAlphaBetaSwap abs(gm);
-    MinAlphaBetaSwap::VerboseVisitorType visitor;
+    MinAlphaBetaSwap::VISITOR_TYPE visitor;
     abs.infer(visitor);
     abs.arg(labeling);
 }
@@ -60,29 +63,69 @@ else if (use_aexp_graphcut_ibfs) {
     typedef opengm::GraphCut<Model, opengm::Minimizer, MinStCutType> MinGraphCut;
     typedef opengm::AlphaExpansion<Model, MinGraphCut> MinAlphaExpansion;
     MinAlphaExpansion aexp(gm);
-    MinAlphaExpansion::VerboseVisitorType visitor;
+    MinAlphaExpansion::VISITOR_TYPE visitor;
     aexp.infer(visitor);
     aexp.arg(labeling);
 }
 #endif
 
 #ifdef WITH_BOOST
-else if (use_ab_graphcut_boost) {
-    typedef opengm::MinSTCutBoost<size_t, double> MinStCutType;
+else if (use_ab_graphcut_boost_kl) {
+    typedef opengm::MinSTCutBoost<size_t, double, opengm::KOLMOGOROV> MinStCutType;
     typedef opengm::GraphCut<Model, opengm::Minimizer, MinStCutType> MinGraphCut;
     typedef opengm::AlphaBetaSwap<Model, MinGraphCut> MinAlphaBetaSwap;
     MinAlphaBetaSwap abs(gm);
-    MinAlphaBetaSwap::VerboseVisitorType visitor;
+    MinAlphaBetaSwap::VISITOR_TYPE visitor;
     abs.infer(visitor);
     abs.arg(labeling);
 }
 
-else if (use_aexp_graphcut_boost) {
-    typedef opengm::MinSTCutBoost<size_t, double> MinStCutType;
+else if (use_aexp_graphcut_boost_kl) {
+    typedef opengm::MinSTCutBoost<size_t, double, opengm::KOLMOGOROV> MinStCutType;
     typedef opengm::GraphCut<Model, opengm::Minimizer, MinStCutType> MinGraphCut;
     typedef opengm::AlphaExpansion<Model, MinGraphCut> MinAlphaExpansion;
     MinAlphaExpansion aexp(gm);
-    MinAlphaExpansion::VerboseVisitorType visitor;
+    MinAlphaExpansion::VISITOR_TYPE visitor;
+    aexp.infer(visitor);
+    aexp.arg(labeling);
+}
+
+else if (use_ab_graphcut_boost_ed) {
+    typedef opengm::MinSTCutBoost<size_t, double, opengm::EDMONDS_KARP> MinStCutType;
+    typedef opengm::GraphCut<Model, opengm::Minimizer, MinStCutType> MinGraphCut;
+    typedef opengm::AlphaBetaSwap<Model, MinGraphCut> MinAlphaBetaSwap;
+    MinAlphaBetaSwap abs(gm);
+    MinAlphaBetaSwap::VISITOR_TYPE visitor;
+    abs.infer(visitor);
+    abs.arg(labeling);
+}
+
+else if (use_aexp_graphcut_boost_ed) {
+    typedef opengm::MinSTCutBoost<size_t, double, opengm::EDMONDS_KARP> MinStCutType;
+    typedef opengm::GraphCut<Model, opengm::Minimizer, MinStCutType> MinGraphCut;
+    typedef opengm::AlphaExpansion<Model, MinGraphCut> MinAlphaExpansion;
+    MinAlphaExpansion aexp(gm);
+    MinAlphaExpansion::VISITOR_TYPE visitor;
+    aexp.infer(visitor);
+    aexp.arg(labeling);
+}
+
+else if (use_ab_graphcut_boost_pr) {
+    typedef opengm::MinSTCutBoost<size_t, double, opengm::PUSH_RELABEL> MinStCutType;
+    typedef opengm::GraphCut<Model, opengm::Minimizer, MinStCutType> MinGraphCut;
+    typedef opengm::AlphaBetaSwap<Model, MinGraphCut> MinAlphaBetaSwap;
+    MinAlphaBetaSwap abs(gm);
+    MinAlphaBetaSwap::VISITOR_TYPE visitor;
+    abs.infer(visitor);
+    abs.arg(labeling);
+}
+
+else if (use_aexp_graphcut_boost_pr) {
+    typedef opengm::MinSTCutBoost<size_t, double, opengm::PUSH_RELABEL> MinStCutType;
+    typedef opengm::GraphCut<Model, opengm::Minimizer, MinStCutType> MinGraphCut;
+    typedef opengm::AlphaExpansion<Model, MinGraphCut> MinAlphaExpansion;
+    MinAlphaExpansion aexp(gm);
+    MinAlphaExpansion::VISITOR_TYPE visitor;
     aexp.infer(visitor);
     aexp.arg(labeling);
 }
@@ -91,7 +134,7 @@ else if (use_aexp_graphcut_boost) {
 else if (use_icm) {
     typedef opengm::ICM<Model, opengm::Minimizer> MinICM;
     MinICM icm(gm);
-    MinICM::VerboseVisitorType visitor;
+    MinICM::VISITOR_TYPE visitor;
     icm.infer(visitor);
     icm.arg(labeling);
 }
@@ -99,7 +142,7 @@ else if (use_icm) {
 else if (use_lazyFlipper) {
     typedef opengm::LazyFlipper<Model, opengm::Minimizer> LazyFlipper;
     LazyFlipper lf(gm);
-    LazyFlipper::VerboseVisitorType visitor;
+    LazyFlipper::VISITOR_TYPE visitor;
     lf.infer(visitor);
     lf.arg(labeling);
 }
@@ -112,7 +155,7 @@ else if (use_loc) {
     //parameter.maxRadius_ = 10; // obsolated?
     parameter.maxIterations_ = 100;
     LOC loc(gm, parameter);
-    LOC::VerboseVisitorType visitor;
+    LOC::VISITOR_TYPE visitor;
     loc.infer(visitor);
     loc.arg(labeling);
 }
@@ -126,7 +169,7 @@ else if (use_TRBP) {
     const double damping = 0.0;
     TRBP::Parameter parameter(maxNumberOfIterations, convergenceBound, damping);
     TRBP trbp(gm, parameter);
-    TRBP::VerboseVisitorType visitor;
+    TRBP::VISITOR_TYPE visitor;
     trbp.infer(visitor);
     trbp.arg(labeling);
     showMarginals(labeling, trbp, nx, sigma);
@@ -139,7 +182,7 @@ else if (use_TRWS) {
     TRWS::Parameter parameter;
     parameter.tolerance_ = 1e-7;
     TRWS trws(gm, parameter);
-    TRWS::VerboseVisitorType visitor;
+    TRWS::VISITOR_TYPE visitor;
     trws.infer(visitor);
     trws.arg(labeling);
 }
@@ -148,12 +191,12 @@ else if (use_TRWS) {
 #ifdef WITH_SAMPLING
 else if (use_Gibbs) {
     typedef opengm::Gibbs<Model, opengm::Minimizer> Gibbs;
-    const size_t numberOfSamplingSteps = 1e4;
-    const size_t numberOfBurnInSteps = 1e4;
+    const size_t numberOfSamplingSteps = 100;
+    const size_t numberOfBurnInSteps = 100;
     Gibbs::Parameter parameter(numberOfSamplingSteps, numberOfBurnInSteps);
-    parameter.startPoint_ = labeling;
     Gibbs gibbs(gm, parameter);
-    Gibbs::VerboseVisitorType visitor;
+    gibbs.setStartingPoint(labeling.begin());
+    Gibbs::VISITOR_TYPE visitor;
     gibbs.infer(visitor);
     gibbs.arg(labeling);
 }
@@ -165,7 +208,7 @@ else if (use_SwendsenWang) {
     parameter.numberOfBurnInSteps_ = 1e4;
     parameter.initialState_ = labeling;
     SwendsenWang sw(gm, parameter);
-    SwendsenWang::VerboseVisitorType visitor;
+    SwendsenWang::VISITOR_TYPE visitor;
     sw.infer(visitor);
     sw.arg(labeling);
 }
@@ -175,7 +218,7 @@ else if (use_SwendsenWang) {
 else if (use_DP) {
     typedef opengm::DynamicProgramming<Model, opengm::Minimizer> DP;
     DP dp(gm);
-    DP::VerboseVisitorType visitor;
+    DP::VISITOR_TYPE visitor;
     dp.infer(visitor);
     dp.arg(labeling);
 }
@@ -185,7 +228,7 @@ else if (use_DP) {
 else if (use_MQPBO) {
     typedef opengm::MQPBO<Model, opengm::Minimizer> MQPBO; // space must be DiscreteSpace, not SimpleDiscreteSpace
     MQPBO mqpbo(gm);
-    MQPBO::VerboseVisitorType visitor;
+    MQPBO::VISITOR_TYPE visitor;
     mqpbo.infer(visitor);
     mqpbo.arg(labeling);
 }
@@ -193,7 +236,7 @@ else if (use_MQPBO) {
 else if (use_aexp_fusion) {
     typedef opengm::AlphaExpansionFusion<Model, opengm::Minimizer> AlphaExpFusion;
     AlphaExpFusion aexp_fusion(gm);
-    AlphaExpFusion::VerboseVisitorType visitor;
+    AlphaExpFusion::VISITOR_TYPE visitor;
     aexp_fusion.infer(visitor);
     aexp_fusion.arg(labeling);
 }
@@ -203,7 +246,7 @@ else if (use_aexp_fusion) {
 //    typedef opengm::AlphaBetaSwap<Model, MinQPBO> MinAlphaBetaSwap;
 //
 //    MinAlphaBetaSwap abs(gm);
-//    MinAlphaBetaSwap::VerboseVisitorType visitor;
+//    MinAlphaBetaSwap::VISITOR_TYPE visitor;
 //    abs.infer(visitor);
 //
 //    // obtain the (approximate) argmin
@@ -220,7 +263,7 @@ else if (use_MRFLIB_ICM) {
     para.energyType_ = MRFLIB::Parameter::WEIGHTEDTABLE;
     para.numberOfIterations_ = 10;
     MRFLIB mrf(gm,para);
-    MRFLIB::VerboseVisitorType visitor;
+    MRFLIB::VISITOR_TYPE visitor;
     mrf.infer(visitor);
     mrf.arg(labeling);
 }
@@ -232,7 +275,7 @@ else if (use_MRFLIB_aexp) { // segmentation fault
     para.energyType_ = MRFLIB::Parameter::VIEW;
     para.numberOfIterations_ = 10;
     MRFLIB mrf(gm,para);
-    MRFLIB::VerboseVisitorType visitor;
+    MRFLIB::VISITOR_TYPE visitor;
     mrf.infer(visitor);
     mrf.arg(labeling);
 }
@@ -244,7 +287,7 @@ else if (use_MRFLIB_ab) { // segmentation fault
     para.energyType_ = MRFLIB::Parameter::VIEW;
     para.numberOfIterations_ = 10;
     MRFLIB mrf(gm,para);
-    MRFLIB::VerboseVisitorType visitor;
+    MRFLIB::VISITOR_TYPE visitor;
     mrf.infer(visitor);
     mrf.arg(labeling);
 }
@@ -256,7 +299,7 @@ else if (use_MRFLIB_LBP) {
     para.energyType_ = MRFLIB::Parameter::TABLES;
     para.numberOfIterations_ = 10;
     MRFLIB mrf(gm,para);
-    MRFLIB::VerboseVisitorType visitor;
+    MRFLIB::VISITOR_TYPE visitor;
     mrf.infer(visitor);
     mrf.arg(labeling);
 }
@@ -268,7 +311,7 @@ else if (use_MRFLIB_BPS) {
     para.energyType_ = MRFLIB::Parameter::VIEW;
     para.numberOfIterations_ = 10;
     MRFLIB mrf(gm,para);
-    MRFLIB::VerboseVisitorType visitor;
+    MRFLIB::VISITOR_TYPE visitor;
     mrf.infer(visitor);
     mrf.arg(labeling);
 }
@@ -280,7 +323,7 @@ else if (use_MRFLIB_TRWS) {
     para.energyType_ = MRFLIB::Parameter::VIEW;
     para.numberOfIterations_ = 10;
     MRFLIB mrf(gm,para);
-    MRFLIB::VerboseVisitorType visitor;
+    MRFLIB::VISITOR_TYPE visitor;
     mrf.infer(visitor);
     mrf.arg(labeling);
 }
@@ -295,7 +338,7 @@ else if (use_DD_subgradient) {
     DualDecompositionSubGradient::Parameter param;
     param.useProjectedAdaptiveStepsize_ = TRUE;
     DualDecompositionSubGradient ddsg(gm, param);
-    DualDecompositionSubGradient::VerboseVisitorType visitor;
+    DualDecompositionSubGradient::VISITOR_TYPE visitor;
     ddsg.infer(visitor);
     ddsg.arg(labeling);
 }
@@ -310,7 +353,7 @@ else if (use_libdai_BP) {
     size_t verboseLevel=10;
     BP::Parameter parameter(maxIterations, damping, tolerance, updateRule, verboseLevel);
     BP bp(gm, parameter);
-    BP::VerboseVisitorType visitor;
+    BP::VISITOR_TYPE visitor;
     bp.infer(visitor);
     bp.arg(labeling);
 }
@@ -325,7 +368,7 @@ else if (use_libdai_TRBP) {
     size_t verboseLevel=10;
     Trbp::Parameter parameter(maxIterations, damping, tolerance, ntrees, updateRule, verboseLevel);
     Trbp trbp(gm, parameter);
-    Trbp::VerboseVisitorType visitor;
+    Trbp::VISITOR_TYPE visitor;
     trbp.infer(visitor);
     trbp.arg(labeling);
 }
@@ -343,7 +386,7 @@ else if (use_libdai_DLGBP) {
     const size_t verboseLevel=10;
     DoubleLoopGeneralizedBP::Parameter parameter(doubleloop, clusters, loopdepth, init, maxiter, tolerance, verboseLevel);
     DoubleLoopGeneralizedBP gdlbp(gm, parameter);
-    DoubleLoopGeneralizedBP::VerboseVisitorType visitor;
+    DoubleLoopGeneralizedBP::VISITOR_TYPE visitor;
     gdlbp.infer(visitor);
     gdlbp.arg(labeling);
 }
@@ -358,7 +401,7 @@ else if (use_libdai_FBP) {
     size_t verboseLevel=10;
     FractionalBp::Parameter parameter(maxIterations, damping, tolerance, updateRule, verboseLevel);
     FractionalBp fbp(gm, parameter);
-    FractionalBp::VerboseVisitorType visitor;
+    FractionalBp::VISITOR_TYPE visitor;
     fbp.infer(visitor);
     fbp.arg(labeling);
 }
@@ -372,7 +415,7 @@ else if (use_libdai_JT) {
     size_t verboseLevel=10;
     JunctionTree::Parameter parameter(updateRule, heuristic,verboseLevel);
     JunctionTree jt(gm, parameter);
-    JunctionTree::VerboseVisitorType visitor;
+    JunctionTree::VISITOR_TYPE visitor;
     jt.infer(visitor);
     jt.arg(labeling);
 }
@@ -386,7 +429,7 @@ else if (use_libdai_TEP) {
     size_t verboseLevel=10;
     TreeExpectationPropagation::Parameter parameter(treeEpTyp, maxiter, tolerance, verboseLevel);
     TreeExpectationPropagation treeep(gm, parameter);
-    TreeExpectationPropagation::VerboseVisitorType visitor;
+    TreeExpectationPropagation::VISITOR_TYPE visitor;
     treeep.infer(visitor);
     treeep.arg(labeling);
 }
@@ -399,7 +442,7 @@ else if (use_libdai_Gibbs) {
     const size_t verbose = 0;
     Gibbs::Parameter parameter(maxiter, burnin, restart, verbose);
     Gibbs gibbs(gm, parameter);
-    Gibbs::VerboseVisitorType visitor;
+    Gibbs::VISITOR_TYPE visitor;
     gibbs.infer(visitor);
     gibbs.arg(labeling);
 }
@@ -416,7 +459,7 @@ else if (use_libdai_MF) {  // fixed; libc++abi.dylib: terminate called throwing 
     const size_t verboseLevel=10;
     MeanField::Parameter parameter(maxiter,damping,tolerance,updateRule,init,verboseLevel);
     MeanField mf(gm, parameter);
-    MeanField::EmptyVisitorType visitor;
+    MeanField::EmptyVisitorType visitor; // only this visitor works
     mf.infer(visitor);
     //mf.arg(labeling); // does not work
     showMarginals(labeling, mf, nx, sigma);
@@ -430,7 +473,7 @@ else if (use_fastPD) {
     fastPD::Parameter param;
     param.numberOfIterations_ = 1000;
     fastPD fastpd(gm, param);
-    fastPD::VerboseVisitorType visitor;
+    fastPD::VISITOR_TYPE visitor;
     fastpd.infer(visitor);
     fastpd.arg(labeling);
 }
@@ -442,7 +485,7 @@ else if (use_MPLP) {
     Mplp::Parameter param;
     param.maxTime_ = 120;
     Mplp mplp(gm, param);
-    Mplp::VerboseVisitorType visitor;
+    Mplp::VISITOR_TYPE visitor;
     mplp.infer(visitor);
     mplp.arg(labeling);
 }
@@ -456,7 +499,7 @@ else if (use_GCO_aexp) {
     param.energyType_ = GCO::Parameter::VIEW; // VIEW, TABLES, WEIGHTEDTABLE
     param.useAdaptiveCycles_ = false; // for alpha-expansion
     GCO gco(gm, param);
-    GCO::VerboseVisitorType visitor;
+    GCO::VISITOR_TYPE visitor;
     gco.infer(visitor);
     gco.arg(labeling);
 }
@@ -467,7 +510,7 @@ else if (use_GCO_swap) {
     param.inferenceType_ = GCO::Parameter::SWAP; // EXPANSION, SWAP
     param.energyType_ = GCO::Parameter::VIEW; // VIEW, TABLES, WEIGHTEDTABLE
     GCO gco(gm, param);
-    GCO::VerboseVisitorType visitor;
+    GCO::VISITOR_TYPE visitor;
     gco.infer(visitor);
     gco.arg(labeling);
 }
