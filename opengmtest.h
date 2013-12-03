@@ -89,7 +89,7 @@
 #include <opengm/inference/external/trws.hxx>
 #endif
 
-#ifdef WITH_MRF
+#ifdef WITH_MRFLIB
 #include <opengm/inference/external/mrflib.hxx>
 #endif
 

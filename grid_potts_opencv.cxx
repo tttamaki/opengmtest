@@ -12,6 +12,71 @@
 
 #include "opengmtest.h"
 
+
+
+#include "boost/program_options.hpp"
+
+
+struct options {
+    int LIBDAI;
+    int MAXFLOW;
+    int MAXFLOW_IBFS;
+    int BOOST;
+    int QPBO;
+    int TRWS;
+    int AD3;
+    int MRFLIB;
+    int FASTPD;
+    int MPLP;
+    int GCO;
+    int SAMPLING;
+};
+
+options parseOptions(int argc, char* argv[]) {
+    
+    options Opt;
+    
+    namespace po = boost::program_options;
+    po::options_description desc("Options");
+    desc.add_options()
+    ("help", "This help message.")
+#define ADD_COND(NAME) (#NAME, po::value<int>(&Opt.NAME)->default_value(1), "shown(1) / not shown(0)")
+    ADD_COND(LIBDAI)
+    ADD_COND(MAXFLOW)
+    ADD_COND(MAXFLOW_IBFS)
+    ADD_COND(BOOST)
+    ADD_COND(QPBO)
+    ADD_COND(TRWS)
+    ADD_COND(AD3)
+    ADD_COND(MRFLIB)
+    ADD_COND(FASTPD)
+    ADD_COND(MPLP)
+    ADD_COND(GCO)
+    ADD_COND(SAMPLING)
+    ;
+    
+    
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);
+    
+    
+    if (vm.count("help")) {
+        cout << desc << endl;
+        exit(0);
+    }
+    
+    return Opt;
+}
+
+
+
+
+
+
+
+
+
 void
 imshow(const std::string &title,
        const Eigen::MatrixXf &img,
@@ -130,9 +195,10 @@ showMarginals(const std::vector<size_t> &labeling,
 
 
 
-int main() {
+int main(int argc, char* argv[]) {
     
-    
+    options Opt = parseOptions(argc, argv);
+
     
     
     cv::namedWindow("control panel", CV_WINDOW_NORMAL | CV_GUI_EXPANDED);
@@ -156,6 +222,7 @@ int main() {
     
     
     std::vector<Eigen::MatrixXf> gridvec;
+    std::vector<size_t> labeling(nx * nx);
     
     
     while(1){
@@ -171,6 +238,7 @@ int main() {
         
         if(recreate == 1){
             gridvec.clear();
+            labeling.clear();
             double cx[] = {nx/4, nx/4*3, nx/4*3};
             double cy[] = {nx/4, nx/4,   nx/4*3};
             Eigen::MatrixXf mygridsum = Eigen::MatrixXf::Zero(nx,nx);
@@ -268,7 +336,7 @@ int main() {
 
         
 
-        std::vector<size_t> labeling(nx * nx);
+
         
 #include "infer.hxx"
         

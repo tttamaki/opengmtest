@@ -177,7 +177,6 @@ else if (use_TRBP) {
 
 #ifdef WITH_TRWS
 else if (use_TRWS) {
-    typedef opengm::TrbpUpdateRules<Model, opengm::Minimizer> UpdateRules;
     typedef opengm::external::TRWS<Model> TRWS;
     TRWS::Parameter parameter;
     parameter.tolerance_ = 1e-7;
@@ -191,11 +190,17 @@ else if (use_TRWS) {
 #ifdef WITH_SAMPLING
 else if (use_Gibbs) {
     typedef opengm::Gibbs<Model, opengm::Minimizer> Gibbs;
-    const size_t numberOfSamplingSteps = 100;
-    const size_t numberOfBurnInSteps = 100;
-    Gibbs::Parameter parameter(numberOfSamplingSteps, numberOfBurnInSteps);
+    const size_t numberOfSamplingSteps = 1000;
+    const size_t numberOfBurnInSteps = 1000;
+    const bool useTemp = true;
+    Gibbs::Parameter parameter(numberOfSamplingSteps, numberOfBurnInSteps, useTemp);
     Gibbs gibbs(gm, parameter);
     gibbs.setStartingPoint(labeling.begin());
+//    opengm::GibbsMarginalVisitor<Gibbs> visitor;
+//    visitor = opengm::GibbsMarginalVisitor<Gibbs>(gm);
+//    for(size_t j = 0; j < gm.numberOfVariables(); ++j) {
+//        visitor.addMarginal(j);
+//    }
     Gibbs::VISITOR_TYPE visitor;
     gibbs.infer(visitor);
     gibbs.arg(labeling);
@@ -255,7 +260,7 @@ else if (use_aexp_fusion) {
 
 #endif
 
-#ifdef WITH_MRF
+#ifdef WITH_MRFLIB
 else if (use_MRFLIB_ICM) {
     typedef opengm::external::MRFLIB<Model> MRFLIB;
     MRFLIB::Parameter para;

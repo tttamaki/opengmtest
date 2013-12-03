@@ -7,126 +7,91 @@
 #define opengmtest_controlpanel_hxx
 
 
-int use_BP = 0;
-cv::createTrackbar("BP", "control panel", &use_BP, 1,  NULL);
+#define ADD_PANEL(COND,EXP,VAR) \
+int VAR = 0; if(COND){ cv::createTrackbar(EXP, "control panel", &VAR, 1,  NULL); }
+
+
+
+ADD_PANEL(true, "BP", use_BP)
 
 #ifdef WITH_MAXFLOW
-int use_ab_graphcut = 0;
-cv::createTrackbar("a-b GC (Kol)", "control panel", &use_ab_graphcut, 1,  NULL);
-int use_aexp_graphcut = 0;
-cv::createTrackbar("a-exp GC (Kol)", "control panel", &use_aexp_graphcut, 1,  NULL);
+ADD_PANEL(Opt.MAXFLOW, "a-b GC (Kol)", use_ab_graphcut)
+ADD_PANEL(Opt.MAXFLOW, "a-exp GC (Kol)", use_aexp_graphcut)
 #endif
 
 #ifdef WITH_MAXFLOW_IBFS
-int use_ab_graphcut_ibfs = 0;
-cv::createTrackbar("a-b GC (IBFS)", "control panel", &use_ab_graphcut_ibfs, 1,  NULL);
-int use_aexp_graphcut_ibfs = 0;
-cv::createTrackbar("a-exp GC (IBFS)", "control panel", &use_aexp_graphcut_ibfs, 1,  NULL);
+ADD_PANEL(Opt.MAXFLOW_IBFS, "a-b GC (IBFS)",   use_ab_graphcut_ibfs)
+ADD_PANEL(Opt.MAXFLOW_IBFS, "a-exp GC (IBFS)", use_aexp_graphcut_ibfs)
 #endif
 
 #ifdef WITH_BOOST
-int use_ab_graphcut_boost_kl = 0;
-cv::createTrackbar("a-b GC (Boost KOL)", "control panel", &use_ab_graphcut_boost_kl, 1,  NULL);
-int use_aexp_graphcut_boost_kl = 0;
-cv::createTrackbar("a-exp GC (Boost KOL)", "control panel", &use_aexp_graphcut_boost_kl, 1,  NULL);
-int use_ab_graphcut_boost_ed = 0;
-cv::createTrackbar("a-b GC (Boost ED)", "control panel", &use_ab_graphcut_boost_ed, 1,  NULL);
-int use_aexp_graphcut_boost_ed = 0;
-cv::createTrackbar("a-exp GC (Boost ED)", "control panel", &use_aexp_graphcut_boost_ed, 1,  NULL);
-int use_ab_graphcut_boost_pr = 0;
-cv::createTrackbar("a-b GC (Boost PR)", "control panel", &use_ab_graphcut_boost_pr, 1,  NULL);
-int use_aexp_graphcut_boost_pr = 0;
-cv::createTrackbar("a-exp GC (Boost PR)", "control panel", &use_aexp_graphcut_boost_pr, 1,  NULL);
+ADD_PANEL(Opt.BOOST, "a-b GC (Boost KOL)",   use_ab_graphcut_boost_kl)
+ADD_PANEL(Opt.BOOST, "a-exp GC (Boost KOL)", use_aexp_graphcut_boost_kl)
+ADD_PANEL(Opt.BOOST, "a-b GC (Boost ED)",    use_ab_graphcut_boost_ed)
+ADD_PANEL(Opt.BOOST, "a-exp GC (Boost ED)",  use_aexp_graphcut_boost_ed)
+ADD_PANEL(Opt.BOOST, "a-b GC (Boost PR)",    use_ab_graphcut_boost_pr)
+ADD_PANEL(Opt.BOOST, "a-exp GC (Boost PR)",  use_aexp_graphcut_boost_pr)
 #endif
 
-int use_icm = 0;
-cv::createTrackbar("ICM", "control panel", &use_icm, 1,  NULL);
-int use_lazyFlipper = 0;
-cv::createTrackbar("LazyFlipper", "control panel", &use_lazyFlipper, 1,  NULL);
+ADD_PANEL(true, "ICM", use_icm)
+ADD_PANEL(true, "LazyFlipper", use_lazyFlipper)
 
 #ifdef WITH_AD3
-int use_loc = 0;
-cv::createTrackbar("LOC", "control panel", &use_loc, 1,  NULL);
+ADD_PANEL(Opt.AD3, "LOC", use_loc)
 #endif
 
-int use_TRBP = 0;
-cv::createTrackbar("TRBP", "control panel", &use_TRBP, 1,  NULL);
+ADD_PANEL(true, "TRBP", use_TRBP)
+
 
 #ifdef WITH_TRWS
-int use_TRWS = 0;
-cv::createTrackbar("TRWS", "control panel", &use_TRWS, 1,  NULL);
+ADD_PANEL(Opt.TRWS, "TRWS", use_TRWS)
 #endif
 
 #ifdef WITH_SAMPLING
-// Gibbs and SW seem to be implemented for minimizer only.
-int use_Gibbs = 0;
-cv::createTrackbar("Gibbs", "control panel", &use_Gibbs, 1,  NULL);
-int use_SwendsenWang = 0;
-cv::createTrackbar("SW", "control panel", &use_SwendsenWang, 1,  NULL);
+ADD_PANEL(Opt.SAMPLING, "Gibbs", use_Gibbs)
+ADD_PANEL(Opt.SAMPLING, "SW",    use_SwendsenWang)
 #endif
 
-int use_DP = 0;
-cv::createTrackbar("DP", "control panel", &use_DP, 1,  NULL);
+ADD_PANEL(false, "DP", use_DP)
 
 #ifdef WITH_QPBO
-int use_MQPBO = 0;
-cv::createTrackbar("MQPBO", "control panel", &use_MQPBO, 1,  NULL);
-int use_aexp_fusion = 0;
-cv::createTrackbar("a-exp-fusion", "control panel", &use_aexp_fusion, 1,  NULL);
+ADD_PANEL(Opt.QPBO, "MQPBO", use_MQPBO)
+ADD_PANEL(Opt.QPBO, "a-exp-fusion", use_aexp_fusion)
 #endif
 
-#ifdef WITH_MRF
-int use_MRFLIB_ICM = 0;
-cv::createTrackbar("MRFLIB ICM", "control panel", &use_MRFLIB_ICM, 1,  NULL);
-int use_MRFLIB_aexp = 0;
-cv::createTrackbar("MRFLIB a-exp", "control panel", &use_MRFLIB_aexp, 1,  NULL);
-int use_MRFLIB_ab = 0;
-cv::createTrackbar("MRFLIB ab", "control panel", &use_MRFLIB_ab, 1,  NULL);
-int use_MRFLIB_LBP = 0;
-cv::createTrackbar("MRFLIB LBP", "control panel", &use_MRFLIB_LBP, 1,  NULL);
-int use_MRFLIB_BPS = 0;
-cv::createTrackbar("MRFLIB BPS", "control panel", &use_MRFLIB_BPS, 1,  NULL);
-int use_MRFLIB_TRWS = 0;
-cv::createTrackbar("MRFLIB TRWS", "control panel", &use_MRFLIB_TRWS, 1,  NULL);
+#ifdef WITH_MRFLIB
+ADD_PANEL(Opt.MRFLIB, "MRFLIB ICM",   use_MRFLIB_ICM)
+ADD_PANEL(Opt.MRFLIB, "MRFLIB a-exp", use_MRFLIB_aexp)
+ADD_PANEL(Opt.MRFLIB, "MRFLIB ab",    use_MRFLIB_ab)
+ADD_PANEL(Opt.MRFLIB, "MRFLIB LBP",   use_MRFLIB_LBP)
+ADD_PANEL(Opt.MRFLIB, "MRFLIB BPS",   use_MRFLIB_BPS)
+ADD_PANEL(Opt.MRFLIB, "MRFLIB TRWS",  use_MRFLIB_TRWS)
 #endif
 
-int use_DD_subgradient = 0;
-cv::createTrackbar("DD subgrad", "control panel", &use_DD_subgradient, 1,  NULL);
+ADD_PANEL(true, "DD subgrad", use_DD_subgradient)
 
 #ifdef WITH_LIBDAI
-int use_libdai_BP = 0;
-cv::createTrackbar("libdai BP", "control panel", &use_libdai_BP, 1,  NULL);
-int use_libdai_TRBP = 0;
-cv::createTrackbar("libdai TRBP", "control panel", &use_libdai_TRBP, 1,  NULL);
-int use_libdai_DLGBP = 0;
-cv::createTrackbar("libdai DLGBP", "control panel", &use_libdai_DLGBP, 1,  NULL);
-int use_libdai_FBP = 0;
-cv::createTrackbar("libdai FBP", "control panel", &use_libdai_FBP, 1,  NULL);
-int use_libdai_JT = 0;
-cv::createTrackbar("libdai JT", "control panel", &use_libdai_JT, 1,  NULL);
-int use_libdai_TEP = 0;
-cv::createTrackbar("libdai TEP", "control panel", &use_libdai_TEP, 1,  NULL);
-int use_libdai_Gibbs = 0;
-cv::createTrackbar("libdai Gibbs", "control panel", &use_libdai_Gibbs, 1,  NULL);
-int use_libdai_MF = 0;
-cv::createTrackbar("libdai MF", "control panel", &use_libdai_MF, 1,  NULL);
+ADD_PANEL(Opt.LIBDAI, "libdai BP",    use_libdai_BP)
+ADD_PANEL(Opt.LIBDAI, "libdai TRBP",  use_libdai_TRBP)
+ADD_PANEL(Opt.LIBDAI, "libdai DLGBP", use_libdai_DLGBP)
+ADD_PANEL(Opt.LIBDAI, "libdai FBP",   use_libdai_FBP)
+ADD_PANEL(Opt.LIBDAI, "libdai JT",    use_libdai_JT)
+ADD_PANEL(Opt.LIBDAI, "libdai TEP",   use_libdai_TEP)
+ADD_PANEL(Opt.LIBDAI, "libdai Gibbs", use_libdai_Gibbs)
+ADD_PANEL(Opt.LIBDAI, "libdai MF",    use_libdai_MF)
 #endif
 
 #ifdef WITH_FASTPD
-int use_fastPD = 0;
-cv::createTrackbar("FastPD", "control panel", &use_fastPD, 1,  NULL);
+ADD_PANEL(Opt.FASTPD, "FastPD", use_fastPD)
 #endif
 
 #ifdef WITH_MPLP
-int use_MPLP = 0;
-cv::createTrackbar("MPLP", "control panel", &use_MPLP, 1,  NULL);
+ADD_PANEL(Opt.MPLP, "MPLP", use_MPLP)
 #endif
 
 #ifdef WITH_GCO
-int use_GCO_aexp = 0;
-cv::createTrackbar("GCO aexp", "control panel", &use_GCO_aexp, 1,  NULL);
-int use_GCO_swap = 0;
-cv::createTrackbar("GCO swap", "control panel", &use_GCO_swap, 1,  NULL);
+ADD_PANEL(Opt.GCO, "GCO aexp", use_GCO_aexp)
+ADD_PANEL(Opt.GCO, "GCO swap", use_GCO_swap)
 #endif
 
 

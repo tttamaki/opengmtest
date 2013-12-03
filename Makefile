@@ -1,7 +1,7 @@
 OPENGM_EXTSRC = /Users/tamaki/dev/opengm/src/external
 OPENGM_EXTLIB = /Users/tamaki/dev/opengm/build/src/external
 LIBDAI_LIB    = /Users/tamaki/dev/libdai/lib
-EXTLIBS =
+EXTLIBS = -lboost_program_options-mt
 
 WITH_LIBDAI = 1
 WITH_MAXFLOW = 1
@@ -10,7 +10,7 @@ WITH_BOOST = 1
 WITH_QPBO = 1
 WITH_TRWS = 1
 WITH_AD3 = 1
-WITH_MRF = 1
+WITH_MRFLIB = 1
 WITH_FASTPD = 1
 WITH_MPLP = 1
 WITH_GCO = 1
@@ -70,8 +70,8 @@ ifdef WITH_GCO
   EXTLIBS += -I$(OPENGM_EXTSRC)/GCO-v3.0.src-patched/      -lexternal-library-gco     -DWITH_GCO -DGCOENERGYVALUE=double -DGCOLABELVALUE=int
 endif
 
-ifdef WITH_MRF
-  EXTLIBS += -I$(OPENGM_EXTSRC)/MRF-v2.1.src-patched/      -lexternal-library-mrf     -DWITH_MRF -DMRFCOSTVALUE=double -DMRFENERGYVALUE=double -DMRFLABELVALUE=int
+ifdef WITH_MRFLIB
+  EXTLIBS += -I$(OPENGM_EXTSRC)/MRF-v2.1.src-patched/      -lexternal-library-mrf     -DWITH_MRFLIB -DMRFCOSTVALUE=double -DMRFENERGYVALUE=double -DMRFLABELVALUE=int
   ifeq ($(ARCHS),x86_64)
     EXTLIBS += -DUSE_64_BIT_PTR_CAST
   endif
@@ -99,7 +99,6 @@ gridcv: grid_potts_opencv.cxx
 
 stereo: stereo.cxx
 	g++ -o stereo stereo.cxx \
-	 -lboost_program_options-mt \
 	$(OPTIONS)
 
 clean:
