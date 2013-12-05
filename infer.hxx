@@ -190,8 +190,8 @@ else if (use_TRWS) {
 #ifdef WITH_SAMPLING
 else if (use_Gibbs) {
     typedef opengm::Gibbs<Model, opengm::Minimizer> Gibbs;
-    const size_t numberOfSamplingSteps = 1000;
-    const size_t numberOfBurnInSteps = 1000;
+    const size_t numberOfSamplingSteps = gm.numberOfVariables() * 100;
+    const size_t numberOfBurnInSteps   = gm.numberOfVariables() * 100;
     const bool useTemp = true;
     Gibbs::Parameter parameter(numberOfSamplingSteps, numberOfBurnInSteps, useTemp);
     Gibbs gibbs(gm, parameter);
