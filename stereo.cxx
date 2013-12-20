@@ -47,10 +47,25 @@ inline size_t variableIndex(const size_t x, const size_t y, const size_t nx) {
 struct options {
     std::string filenameL;
     std::string filenameR;
+    
+    int LIBDAI;
+    int MAXFLOW;
+    int MAXFLOW_IBFS;
+    int BOOST;
+    int QPBO;
+    int TRWS;
+    int AD3;
+    int MRFLIB;
+    int FASTPD;
+    int MPLP;
+    int GCO;
+    int SAMPLING;
 };
 
 
 options parseOptions(int argc, char* argv[]) {
+
+    options Opt;
     
     namespace po = boost::program_options;
     
@@ -59,13 +74,25 @@ options parseOptions(int argc, char* argv[]) {
     ("help", "This help message.")
     ("L", po::value<string>(), "left  image filename")
     ("R", po::value<string>(), "right image filename")
+#define ADD_COND(NAME) (#NAME, po::value<int>(&Opt.NAME)->default_value(1), "shown(1) / not shown(0)")
+    ADD_COND(LIBDAI)
+    ADD_COND(MAXFLOW)
+    ADD_COND(MAXFLOW_IBFS)
+    ADD_COND(BOOST)
+    ADD_COND(QPBO)
+    ADD_COND(TRWS)
+    ADD_COND(AD3)
+    ADD_COND(MRFLIB)
+    ADD_COND(FASTPD)
+    ADD_COND(MPLP)
+    ADD_COND(GCO)
+    ADD_COND(SAMPLING)
     ;
     
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
     
-    options Opt;
     
     if (vm.count("help")) {
         cout << desc << endl;
@@ -104,7 +131,7 @@ showMarginals(const std::vector<size_t> &labeling,
 int main ( int argc, char **argv )
 {
     
-    options Option = parseOptions(argc, argv);
+    options Opt = parseOptions(argc, argv);
 
     
     cv::namedWindow("control panel", CV_WINDOW_NORMAL | CV_GUI_EXPANDED);
@@ -118,7 +145,7 @@ int main ( int argc, char **argv )
     
     
     int nD = 16; // number of disparities
-    cv::createTrackbar("nD", "control panel", &nD, 50,  NULL);
+    cv::createTrackbar("nD", "control panel", &nD, 100,  NULL);
 
     int sigma = 10; // unused now;
     
@@ -128,8 +155,8 @@ int main ( int argc, char **argv )
     
     
     
-    cv::Mat imgL = cv::imread(Option.filenameL);
-    cv::Mat imgR = cv::imread(Option.filenameR);
+    cv::Mat imgL = cv::imread(Opt.filenameL);
+    cv::Mat imgR = cv::imread(Opt.filenameR);
     int nChannelsL = imgL.channels();
     int nChannelsR = imgR.channels();
     assert(nChannelsL == nChannelsR);
