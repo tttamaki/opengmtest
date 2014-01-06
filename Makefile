@@ -102,4 +102,4 @@ stereo: stereo.cxx
 	$(OPTIONS)
 
 clean:
-	rm grid_potts_opencv stereo
+	rm -f grid_potts_opencv stereo

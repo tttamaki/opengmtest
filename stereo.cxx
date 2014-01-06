@@ -136,7 +136,7 @@ int main ( int argc, char **argv )
     
     cv::namedWindow("control panel", CV_WINDOW_NORMAL | CV_GUI_EXPANDED);
     
-    int lambda = 20; // weight for the pairwise term
+    int lambda = 10; // weight for the pairwise term
     cv::createTrackbar("lambda", "control panel", &lambda, 100,  NULL);
     
 
