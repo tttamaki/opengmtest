@@ -134,6 +134,7 @@ else if (use_aexp_graphcut_boost_pr) {
 else if (use_icm) {
     typedef opengm::ICM<Model, opengm::Minimizer> MinICM;
     MinICM icm(gm);
+    icm.setStartingPoint(labeling.begin());
     MinICM::VISITOR_TYPE visitor;
     icm.infer(visitor);
     icm.arg(labeling);
@@ -142,6 +143,7 @@ else if (use_icm) {
 else if (use_lazyFlipper) {
     typedef opengm::LazyFlipper<Model, opengm::Minimizer> LazyFlipper;
     LazyFlipper lf(gm);
+    lf.setStartingPoint(labeling.begin());
     LazyFlipper::VISITOR_TYPE visitor;
     lf.infer(visitor);
     lf.arg(labeling);
@@ -179,7 +181,8 @@ else if (use_TRBP) {
 else if (use_TRWS) {
     typedef opengm::external::TRWS<Model> TRWS;
     TRWS::Parameter parameter;
-    parameter.tolerance_ = 1e-7;
+    parameter.tolerance_ = 1e-4;
+    parameter.numberOfIterations_ = 300;
     TRWS trws(gm, parameter);
     TRWS::VISITOR_TYPE visitor;
     trws.infer(visitor);
