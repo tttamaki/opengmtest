@@ -128,6 +128,72 @@ showMarginals(const std::vector<size_t> &labeling,
     // empty
 }
 
+
+
+
+
+
+template<class T, class I = size_t, class L = size_t>
+class ModifiedTruncatedAbsoluteDifferenceFunction
+: public opengm::FunctionBase<ModifiedTruncatedAbsoluteDifferenceFunction<T, I, L>, T, I, L> {
+public:
+    typedef T ValueType;
+    typedef I IndexType;
+    typedef L LabelType;
+    
+    ModifiedTruncatedAbsoluteDifferenceFunction
+    (
+     const LabelType numberOfLabels1 = 2,
+     const LabelType numberOfLabels2 = 2,
+     const ValueType parameter1 = ValueType(),
+     const ValueType parameter2 = ValueType(),
+     const ValueType parameter3 = ValueType()
+     ):
+    numberOfLabels1_(numberOfLabels1),
+    numberOfLabels2_(numberOfLabels2),
+    parameter1_(parameter1),
+    parameter2_(parameter2),
+    parameter3_(parameter3)
+    {}
+
+    
+    template<class Iterator>
+    inline const T operator()(Iterator begin)const {
+        T value = begin[0];
+        value -= begin[1];
+        value = std::max(ValueType(0), abs(value) - parameter3_);
+        return std::abs(value) > parameter1_ ? parameter1_ * parameter2_ : abs(value) * parameter2_;
+    }
+    size_t dimension()const {
+        return 2;
+    }
+    size_t shape(const IndexType i) const {
+        return (i==0 ? numberOfLabels1_ : numberOfLabels2_);
+    }
+    size_t size()const {
+        return numberOfLabels1_ * numberOfLabels2_;
+    }
+    
+    
+private:
+    size_t numberOfLabels1_;
+    size_t numberOfLabels2_;
+    size_t numberOfLabels3_;
+    T parameter1_;
+    T parameter2_;
+    T parameter3_;
+};
+
+
+
+
+
+
+
+
+
+
+
 int main ( int argc, char **argv )
 {
     
@@ -138,6 +204,8 @@ int main ( int argc, char **argv )
     
     int lambda = 10; // weight for the pairwise term
     cv::createTrackbar("lambda", "control panel", &lambda, 100,  NULL);
+    int lambda2 = 0;
+    cv::createTrackbar("lambda2", "control panel", &lambda2, 100,  NULL);
     
 
 #include "controlpanel.hxx"
@@ -195,7 +263,8 @@ int main ( int argc, char **argv )
         // - support for Potts functions (template parameter PottsFunction<double>)
         typedef opengm::GraphicalModel<double, opengm::Adder,
                                       OPENGM_TYPELIST_2(opengm::ExplicitFunction<double>,
-                                                        opengm::TruncatedAbsoluteDifferenceFunction<double> ) ,
+//                                                        opengm::TruncatedAbsoluteDifferenceFunction<double> ) ,
+                                                        ModifiedTruncatedAbsoluteDifferenceFunction<double> ) ,
                                        Space> Model;
         Model gm(space);
         
@@ -289,7 +358,8 @@ int main ( int argc, char **argv )
         //////////////////////////////////////////
         
 
-        opengm::TruncatedAbsoluteDifferenceFunction<double> f(nD, nD, 2, lambda);
+        //opengm::TruncatedAbsoluteDifferenceFunction<double> f(nD, nD, 2, lambda);
+        ModifiedTruncatedAbsoluteDifferenceFunction<double> f(nD, nD, 2, lambda, lambda2/100.);
         Model::FunctionIdentifier fid = gm.addFunction(f);
         
         // for each pair of nodes (x1, y1), (x2, y2) which are adjacent on the grid,
